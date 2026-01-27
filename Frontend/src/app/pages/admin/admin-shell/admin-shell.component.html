@@ -1,0 +1,47 @@
+<div class="admin-shell">
+  <aside class="sidebar" [class.open]="menuOpen()">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Meraki Admin</span>
+      </div>
+      <button class="menu-toggle" (click)="toggleMenu()">✕</button>
+    </div>
+    <nav class="nav">
+      @for (item of navItems(); track item.path) {
+        <a
+          [routerLink]="item.path"
+          [class.active]="isActive(item.path)"
+          (click)="menuOpen.set(false)"
+        >
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-block">
+        <div class="avatar">{{ user()?.email?.charAt(0) || "A" }}</div>
+        <div class="user-info">
+          <p class="user-email">{{ user()?.email || "Administrador" }}</p>
+          <p class="user-role">{{ user()?.role || "Admin" }}</p>
+        </div>
+      </div>
+      <button class="btn-ghost" (click)="logout()">Sair</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-toggle" (click)="toggleMenu()">☰</button>
+      <div class="topbar-info">
+        <p class="title">Painel Administrativo</p>
+        <p class="subtitle">Gerencie conteúdos e cadastros</p>
+      </div>
+    </header>
+
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
+

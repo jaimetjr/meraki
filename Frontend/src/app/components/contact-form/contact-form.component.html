@@ -1,0 +1,123 @@
+<div class="rounded-lg border p-6 shadow-sm bg-white">
+    @if (isSubmitted()) {
+      <div class="flex flex-col items-center justify-center space-y-4 text-center py-8 fade-in">
+        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-700">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold text-green-700">Mensagem Enviada</h3>
+        <p class="text-gray-600">Obrigado por entrar em contato! Retornaremos em breve.</p>
+        <button (click)="resetForm()" class="btn-secondary">
+          Enviar Outra Mensagem
+        </button>
+      </div>
+    } @else {
+      <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="space-y-4">
+        <div class="space-y-2">
+          <label for="name" class="text-sm font-medium text-gray-700">
+            Nome Completo *
+          </label>
+          <input 
+            id="name" 
+            formControlName="name" 
+            placeholder="Seu nome completo" 
+            required 
+            class="form-input"
+            [class.border-red-500]="contactForm.get('name')?.invalid && contactForm.get('name')?.touched"
+          >
+          @if (contactForm.get('name')?.invalid && contactForm.get('name')?.touched) {
+            <p class="text-sm text-red-600">Nome é obrigatório</p>
+          }
+        </div>
+        
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div class="space-y-2">
+            <label for="email" class="text-sm font-medium text-gray-700">
+              Email *
+            </label>
+            <input 
+              id="email" 
+              type="email" 
+              formControlName="email" 
+              placeholder="seu&#64;email.com" 
+              required 
+              class="form-input"
+              [class.border-red-500]="contactForm.get('email')?.invalid && contactForm.get('email')?.touched"
+            >
+            @if (contactForm.get('email')?.invalid && contactForm.get('email')?.touched) {
+              <p class="text-sm text-red-600">
+                @if (contactForm.get('email')?.errors?.['required']) {
+                  Email é obrigatório
+                } @else if (contactForm.get('email')?.errors?.['email']) {
+                  Email inválido
+                }
+              </p>
+            }
+          </div>
+          <div class="space-y-2">
+            <label for="phone" class="text-sm font-medium text-gray-700">
+              Telefone *
+            </label>
+            <input 
+              id="phone" 
+              formControlName="phone" 
+              placeholder="(00) 00000-0000" 
+              required 
+              class="form-input"
+              [class.border-red-500]="contactForm.get('phone')?.invalid && contactForm.get('phone')?.touched"
+            >
+            @if (contactForm.get('phone')?.invalid && contactForm.get('phone')?.touched) {
+              <p class="text-sm text-red-600">Telefone é obrigatório</p>
+            }
+          </div>
+        </div>
+        
+        <div class="space-y-2">
+          <label for="service" class="text-sm font-medium text-gray-700">
+            Serviço de Interesse
+          </label>
+          <select 
+            id="service" 
+            formControlName="service" 
+            class="form-input"
+          >
+            <option value="" disabled>Selecione um serviço</option>
+            @for (service of services; track service.value) {
+              <option [value]="service.value">{{service.label}}</option>
+            }
+          </select>
+        </div>
+        
+        <div class="space-y-2">
+          <label for="message" class="text-sm font-medium text-gray-700">
+            Mensagem
+          </label>
+          <textarea 
+            id="message" 
+            formControlName="message" 
+            placeholder="Como podemos ajudar?" 
+            rows="4" 
+            class="form-input"
+          ></textarea>
+        </div>
+        
+        <button 
+          type="submit" 
+          [disabled]="isSubmitting() || contactForm.invalid" 
+          class="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          @if (isSubmitting()) {
+            <div class="flex items-center justify-center space-x-2">
+              <div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+              <span>Enviando...</span>
+            </div>
+          } @else {
+            Enviar Mensagem
+          }
+        </button>
+      </form>
+    }
+  </div>
+  

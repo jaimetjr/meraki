@@ -1,0 +1,18 @@
+<section class="panel">
+  <header class="panel-header">
+    <div>
+      <p class="eyebrow">Admin</p>
+      <h2 class="panel-title">{{ title() }}</h2>
+      @if (description()) {
+        <p class="panel-desc">{{ description() }}</p>
+      }
+    </div>
+    <div class="panel-actions" [class.align-start]="actionsAlign() === 'start'">
+      <ng-content select="[panel-actions]"></ng-content>
+    </div>
+  </header>
+  <div class="panel-body">
+    <ng-content></ng-content>
+  </div>
+</section>
+

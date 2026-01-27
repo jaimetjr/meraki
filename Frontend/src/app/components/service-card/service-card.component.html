@@ -1,0 +1,41 @@
+<div class="border rounded-lg p-6 shadow-sm bg-white card-hover">
+  <img 
+    [ngSrc]="service().image" 
+    [alt]="'Imagem do serviço ' + service().name" 
+    width="400" 
+    height="192" 
+    class="w-full h-48 object-cover rounded-lg mb-4"
+    loading="lazy"
+  >
+  <div class="space-y-3">
+    <div class="flex items-center justify-between">
+      <h3 class="text-xl font-bold text-green-700">{{service().name}}</h3>
+      @if (service().category) {
+        <span class="inline-block px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">
+          {{service().category?.name}}
+        </span>
+      }
+    </div>
+    <p class="text-gray-600 leading-relaxed">{{service().description}}</p>
+    @if (service().duration || service().price) {
+      <div class="flex items-center justify-between text-sm text-gray-500 pt-2 border-t">
+        @if (service().duration) {
+          <span class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            {{service().duration}}
+          </span>
+        }
+        @if (service().price) {
+          <span class="font-medium text-green-700">R$ {{service().price}}</span>
+        }
+      </div>
+    }
+    <button (click)="openDialog()" class="w-full btn-secondary cursor-pointer">
+      Saiba Mais
+    </button>
+  </div>
+</div>
+  

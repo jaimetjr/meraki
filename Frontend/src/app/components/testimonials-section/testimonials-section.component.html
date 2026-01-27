@@ -1,0 +1,65 @@
+<section class="w-full section-padding bg-green-50">
+  <div class="container-max">
+    <div class="flex flex-col items-center justify-center space-y-4 text-center">
+      <div class="space-y-2 fade-in">
+        <div class="inline-block rounded-lg bg-green-100 px-3 py-1 text-sm text-green-700" #titleEffect>Depoimentos</div>
+        <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-green-800">
+          O Que Nossos Clientes Dizem
+        </h2>
+        <p class="max-w-[900px] text-gray-600 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+          Histórias reais de pessoas que transformaram suas vidas com nossos tratamentos.
+        </p>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="mx-auto grid max-w-5xl gap-6 py-12 md:grid-cols-2 lg:grid-cols-3">
+        @for (i of [1,2,3]; track i) {
+          <div class="flex flex-col justify-between space-y-4 rounded-lg border p-6 shadow-sm bg-white">
+            <div class="space-y-2">
+              <div class="flex items-center space-x-1">
+                @for (s of [1,2,3,4,5]; track s) {
+                  <div class="h-5 w-5 skeleton rounded"></div>
+                }
+              </div>
+              <div class="w-full h-12 skeleton rounded"></div>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="h-10 w-10 rounded-full skeleton"></div>
+              <div class="space-y-1 w-full">
+                <div class="w-24 h-3 skeleton rounded"></div>
+                <div class="w-20 h-3 skeleton rounded"></div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="mx-auto grid max-w-5xl gap-6 py-12 md:grid-cols-2 lg:grid-cols-3">
+        @for (t of testimonials(); track t.id) {
+          <div class="flex flex-col justify-between space-y-4 rounded-lg border p-6 shadow-sm bg-white card-hover">
+            <div class="space-y-2">
+              <div class="flex items-center">
+                @for (i of [1,2,3,4,5]; track i) {
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-400" [class.opacity-30]="i > t.rating">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                }
+              </div>
+              <p class="text-gray-600">"{{ t.content }}"</p>
+            </div>
+            <div class="flex items-center space-x-4">
+              <img [src]="t.authorAvatarUrl" [alt]="t.authorName" class="h-10 w-10 rounded-full object-cover">
+              <div>
+                <p class="text-sm font-medium">{{ t.authorName }}</p>
+                @if (t.authorBadge) { <p class="text-xs text-gray-500">{{ t.authorBadge }}</p> }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>
+
+

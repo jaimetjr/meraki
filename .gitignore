@@ -416,3 +416,12 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+Backend/USER_ROLE_ENUM_CHANGES.md
+Backend/ENUMS.md
+Backend/ENTITY_FIELDS.md
+Backend/DTOS_DOCUMENTATION.md
+Backend/API_ENDPOINTS.md
+Backend/API_CHANGES_FRONTEND.md
+
+.angular
+dist

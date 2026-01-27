@@ -1,0 +1,77 @@
+@if (isOpen() && service()) {
+    <div 
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="'dialog-title-' + service()?.id"
+      [attr.aria-describedby]="'dialog-description-' + service()?.id"
+      (click)="closeDialog()"
+    >
+      <div 
+        #dialogContent
+        class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+        (click)="$event.stopPropagation()"
+        (keydown)="onKeyDown($event)"
+      >
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 
+              [id]="'dialog-title-' + service()?.id"
+              class="text-2xl text-green-700"
+            >
+              {{service()?.name}}
+            </h2>
+            <button 
+              #closeButton
+              (click)="closeDialog()" 
+              class="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded p-1"
+              aria-label="Fechar diálogo"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+  
+          <p 
+            [id]="'dialog-description-' + service()?.id"
+            class="text-base text-gray-600 pt-4"
+          >
+            {{service()?.longDescription}}
+          </p>
+  
+          <div class="py-4">
+            <h4 class="mb-2 font-medium text-green-700">Benefícios:</h4>
+            <ul class="ml-5 list-disc space-y-1 text-gray-600">
+              @for (benefit of service()?.benefits || []; track $index) {
+                <li>{{benefit.title}}</li>
+              }
+            </ul>
+  
+            <div class="mt-6 grid grid-cols-2 gap-4">
+              <div class="rounded-lg bg-green-50 p-3">
+                <h5 class="font-medium text-green-700">Duração</h5>
+                <p class="text-gray-600">{{service()?.duration}}</p>
+              </div>
+              <div class="rounded-lg bg-green-50 p-3">
+                <h5 class="font-medium text-green-700">Valor</h5>
+                <p class="text-gray-600">{{service()?.price}}</p>
+              </div>
+            </div>
+          </div>
+  
+          <div class="flex justify-end mt-6">
+            <button 
+              #lastFocusable
+              (click)="scheduleConsultation()" 
+              class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            >
+              Agendar Consulta
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+  

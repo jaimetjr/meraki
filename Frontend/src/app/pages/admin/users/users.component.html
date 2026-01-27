@@ -1,0 +1,160 @@
+<app-admin-panel
+  title="Usuários"
+  description="Gerencie usuários do sistema. Apenas Super Admin pode acessar esta área."
+>
+  <div class="actions">
+    <button class="btn-primary" (click)="startCreate()">Novo usuário</button>
+  </div>
+
+  @if (error()) {
+    <div class="alert">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <app-admin-loading></app-admin-loading>
+  } @else if (users().length === 0) {
+    <app-admin-empty message="Nenhum usuário cadastrado."></app-admin-empty>
+  } @else {
+    <div class="table">
+      <div class="table-head">
+        <div>Email</div>
+        <div>Nome</div>
+        <div>Papel</div>
+        <div>Status</div>
+        <div>Ações</div>
+      </div>
+      @for (user of users(); track user.id) {
+        <div class="table-row">
+          <div>
+            <p class="title">{{ user.email }}</p>
+          </div>
+          <div>
+            @if (user.firstName || user.lastName) {
+              {{ user.firstName }} {{ user.lastName }}
+            } @else {
+              <span class="muted">-</span>
+            }
+          </div>
+          <div>
+            <span [class.role-badge]="true" [class.role-superadmin]="user.role === UserRole.SuperAdmin">
+              {{ getRoleLabel(user.role) }}
+            </span>
+          </div>
+          <div>
+            <span [class.status-badge]="true" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+              {{ user.isActive ? 'Ativo' : 'Inativo' }}
+            </span>
+          </div>
+          <div class="row-actions">
+            <button class="btn-ghost" (click)="startEdit(user)">Editar</button>
+            <button class="btn-danger" (click)="confirmDelete(user.id!)">Excluir</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (editingId() !== null || isCreating()) {
+    <app-admin-form-modal
+      [title]="editingId() ? 'Editar usuário' : 'Novo usuário'"
+      [visible]="true"
+      (close)="cancelEdit()"
+    >
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+        <label>
+          <span>Email*</span>
+          <input 
+            type="email"
+            formControlName="email" 
+            [class.border-red-500]="form.get('email')?.invalid && form.get('email')?.touched"
+          />
+          @if (form.get('email')?.invalid && form.get('email')?.touched) {
+            <p class="text-sm text-red-600">
+              @if (form.get('email')?.errors?.['required']) {
+                Email é obrigatório.
+              } @else if (form.get('email')?.errors?.['email']) {
+                Email inválido.
+              }
+            </p>
+          }
+        </label>
+        <label>
+          <span>Senha@if (isCreating()) { *}</span>
+          <input 
+            type="password"
+            formControlName="password" 
+            [class.border-red-500]="form.get('password')?.invalid && form.get('password')?.touched"
+            [placeholder]="isCreating() ? 'Mínimo 6 caracteres' : 'Deixe em branco para manter a senha atual'"
+          />
+          @if (form.get('password')?.invalid && form.get('password')?.touched) {
+            <p class="text-sm text-red-600">
+              @if (form.get('password')?.errors?.['required']) {
+                Senha é obrigatória.
+              } @else if (form.get('password')?.errors?.['minlength']) {
+                Senha deve ter no mínimo 6 caracteres.
+              }
+            </p>
+          }
+        </label>
+        <label>
+          <span>Nome</span>
+          <input 
+            formControlName="firstName"
+            [class.border-red-500]="form.get('firstName')?.invalid && form.get('firstName')?.touched"
+          />
+        </label>
+        <label>
+          <span>Sobrenome</span>
+          <input 
+            formControlName="lastName"
+            [class.border-red-500]="form.get('lastName')?.invalid && form.get('lastName')?.touched"
+          />
+        </label>
+        <label>
+          <span>Papel*</span>
+          <select 
+            formControlName="role"
+            [class.border-red-500]="form.get('role')?.invalid && form.get('role')?.touched"
+          >
+            @for (role of userRoles; track role) {
+              <option [value]="role">{{ getRoleLabel(role) }}</option>
+            }
+          </select>
+          @if (form.get('role')?.invalid && form.get('role')?.touched) {
+            <p class="text-sm text-red-600">
+              Papel é obrigatório.
+            </p>
+          }
+        </label>
+        <label>
+          <span>Status</span>
+          <select 
+            formControlName="isActive"
+            [class.border-red-500]="form.get('isActive')?.invalid && form.get('isActive')?.touched"
+          >
+            <option [value]="true">Ativo</option>
+            <option [value]="false">Inativo</option>
+          </select>
+        </label>
+
+        <app-admin-form-actions
+          [disableSave]="saving()"
+          (cancel)="cancelEdit()"
+          [saveLabel]="editingId() ? 'Salvar alterações' : 'Criar usuário'"
+        ></app-admin-form-actions>
+      </form>
+    </app-admin-form-modal>
+  }
+
+  @if (confirmId()) {
+    <app-admin-confirm-dialog
+      title="Excluir usuário"
+      message="Esta ação não pode ser desfeita."
+      confirmLabel="Excluir"
+      cancelLabel="Cancelar"
+      (confirm)="delete(confirmId()!)"
+      (cancel)="confirmId.set(null)"
+    />
+  }
+</app-admin-panel>
+

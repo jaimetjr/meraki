@@ -1,0 +1,64 @@
+<div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+  <div class="w-full max-w-md">
+    <div class="bg-white shadow-lg rounded-xl p-8 space-y-6">
+      <div class="space-y-2 text-center">
+        <p class="text-sm font-semibold text-green-700 uppercase tracking-wide">Área Administrativa</p>
+        <h1 class="text-2xl font-bold text-gray-800">Acessar painel</h1>
+        <p class="text-sm text-gray-500">Use seu email e senha de administrador</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+        <div class="space-y-2">
+          <label for="email" class="text-sm font-medium text-gray-700">Email</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            class="form-input"
+            [class.border-red-500]="form.get('email')?.invalid && form.get('email')?.touched"
+            placeholder="admin@meraki.com"
+            autocomplete="email"
+          >
+          @if (form.get('email')?.invalid && form.get('email')?.touched) {
+            <p class="text-sm text-red-600">Informe um email válido.</p>
+          }
+        </div>
+
+        <div class="space-y-2">
+          <label for="password" class="text-sm font-medium text-gray-700">Senha</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            class="form-input"
+            [class.border-red-500]="form.get('password')?.invalid && form.get('password')?.touched"
+            placeholder="********"
+            autocomplete="current-password"
+          >
+          @if (form.get('password')?.invalid && form.get('password')?.touched) {
+            <p class="text-sm text-red-600">Senha deve ter ao menos 6 caracteres.</p>
+          }
+        </div>
+
+        @if (errorMessage()) {
+          <div class="rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <button
+          type="submit"
+          class="btn-primary w-full flex items-center justify-center gap-2"
+          [disabled]="loading()"
+        >
+          @if (loading()) {
+            <span class="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          }
+          <span>Entrar</span>
+        </button>
+      </form>
+
+    </div>
+  </div>
+</div>
+

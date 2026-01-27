@@ -1,0 +1,168 @@
+<app-admin-panel
+  title="Terapeutas"
+  description="Gerencie terapeutas e especialidades associadas."
+>
+  <div class="actions">
+    <button class="btn-primary" (click)="startCreate()">Novo terapeuta</button>
+  </div>
+
+  @if (error()) {
+    <div class="alert">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <app-admin-loading></app-admin-loading>
+  } @else if (therapists().length === 0) {
+    <app-admin-empty message="Nenhum terapeuta cadastrado."></app-admin-empty>
+  } @else {
+    <div class="table">
+      <div class="table-head">
+        <div>Nome</div>
+        <div>Experiência</div>
+        <div>Especialidades</div>
+        <div>Ações</div>
+      </div>
+      @for (item of therapists(); track item.id) {
+        <div class="table-row">
+          <div>
+            <p class="title">{{ item.name }}</p>
+            <p class="muted">{{ item.education }}</p>
+          </div>
+          <div>{{ item.experience }}</div>
+          <div>{{ specialtiesLabel(item) }}</div>
+          <div class="row-actions">
+            <button class="btn-ghost" (click)="startEdit(item)">Editar</button>
+            <button class="btn-danger" (click)="confirmDelete(item.id!)">Excluir</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (editingId() !== null || isCreating()) {
+    <app-admin-form-modal
+      [title]="editingId() ? 'Editar terapeuta' : 'Novo terapeuta'"
+      [visible]="true"
+      (close)="cancelEdit()"
+    >
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+        <label>
+          <span>Nome*</span>
+          <input 
+            formControlName="name"
+            [class.border-red-500]="form.get('name')?.invalid && form.get('name')?.touched"
+          />
+          @if (form.get('name')?.invalid && form.get('name')?.touched) {
+            <p class="text-sm text-red-600">
+              @if (form.get('name')?.errors?.['required']) {
+                Nome é obrigatório.
+              } @else if (form.get('name')?.errors?.['maxlength']) {
+                Nome deve ter no máximo 100 caracteres.
+              }
+            </p>
+          }
+        </label>
+        <label>
+          <span>Bio*</span>
+          <input 
+            formControlName="bio"
+            [class.border-red-500]="form.get('bio')?.invalid && form.get('bio')?.touched"
+          />
+          @if (form.get('bio')?.invalid && form.get('bio')?.touched) {
+            <p class="text-sm text-red-600">
+              @if (form.get('bio')?.errors?.['required']) {
+                Bio é obrigatória.
+              } @else if (form.get('bio')?.errors?.['maxlength']) {
+                Bio deve ter no máximo 500 caracteres.
+              }
+            </p>
+          }
+        </label>
+        <label>
+          <span>Imagem@if (!editingId()) { *}</span>
+          <input 
+            type="file"
+            accept="image/*"
+            (change)="onImageFileChange($event)"
+            [class.border-red-500]="form.get('imageFile')?.invalid && form.get('imageFile')?.touched"
+          />
+          @if (form.get('imageFile')?.invalid && form.get('imageFile')?.touched) {
+            <p class="text-sm text-red-600">
+              É necessário fazer upload de uma imagem.
+            </p>
+          }
+          <p class="text-xs text-gray-500 mt-1">
+            @if (editingId()) {
+              Faça upload de uma nova imagem para substituir a atual (opcional)
+            } @else {
+              Faça upload de uma imagem para o terapeuta
+            }
+          </p>
+        </label>
+        <label>
+          <span>Experiência*</span>
+          <input 
+            formControlName="experience"
+            [class.border-red-500]="form.get('experience')?.invalid && form.get('experience')?.touched"
+          />
+          @if (form.get('experience')?.invalid && form.get('experience')?.touched) {
+            <p class="text-sm text-red-600">
+              Experiência é obrigatória.
+            </p>
+          }
+        </label>
+        <label>
+          <span>Formação*</span>
+          <input 
+            formControlName="education"
+            [class.border-red-500]="form.get('education')?.invalid && form.get('education')?.touched"
+          />
+          @if (form.get('education')?.invalid && form.get('education')?.touched) {
+            <p class="text-sm text-red-600">
+              Formação é obrigatória.
+            </p>
+          }
+        </label>
+        <label class="col-span-2">
+          <span>Especialidades</span>
+          <select 
+            multiple
+            size="4"
+            class="multi-select"
+            (change)="onSpecialtiesChange($event)"
+          >
+            @for (s of specialties(); track s.id) {
+              @if (s.id) {
+                <option 
+                  [value]="s.id"
+                  [selected]="form.get('specialtyIds')?.value?.includes(s.id)"
+                >
+                  {{ s.name }}
+                </option>
+              }
+            }
+          </select>
+          <p class="text-xs text-gray-500 mt-1">Mantenha Ctrl (ou Cmd no Mac) pressionado para selecionar múltiplas opções</p>
+        </label>
+
+        <app-admin-form-actions
+          [disableSave]="saving()"
+          (cancel)="cancelEdit()"
+          saveLabel="Salvar terapeuta"
+        ></app-admin-form-actions>
+      </form>
+    </app-admin-form-modal>
+  }
+
+  @if (confirmId()) {
+    <app-admin-confirm-dialog
+      title="Excluir terapeuta"
+      message="Esta ação não pode ser desfeita."
+      confirmLabel="Excluir"
+      cancelLabel="Cancelar"
+      (confirm)="delete(confirmId()!)"
+      (cancel)="confirmId.set(null)"
+    />
+  }
+</app-admin-panel>
+

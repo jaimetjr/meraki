@@ -1,0 +1,23 @@
+<div class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-md w-full" role="region" aria-live="polite" aria-label="Notificações">
+  @for (toast of visibleToasts(); track toast.id) {
+    <div [class]="getSeverityClasses(toast.severity)" role="alert">
+      <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" [attr.aria-hidden]="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getSeverityIcon(toast.severity)" />
+      </svg>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium">{{ toast.message }}</p>
+      </div>
+      <button
+        type="button"
+        (click)="dismiss(toast.id)"
+        class="flex-shrink-0 ml-2 text-current opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-current focus:ring-offset-2 rounded"
+        [attr.aria-label]="'Fechar notificação'"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" [attr.aria-hidden]="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  }
+</div>
+

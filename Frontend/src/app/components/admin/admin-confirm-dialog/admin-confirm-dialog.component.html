@@ -1,0 +1,11 @@
+<div class="backdrop">
+  <div class="dialog">
+    <h3>{{ title() }}</h3>
+    <p>{{ message() }}</p>
+    <div class="actions">
+      <button class="btn-light" (click)="cancel.emit()">{{ cancelLabel() }}</button>
+      <button class="btn-danger" (click)="confirm.emit()">{{ confirmLabel() }}</button>
+    </div>
+  </div>
+ </div>
+

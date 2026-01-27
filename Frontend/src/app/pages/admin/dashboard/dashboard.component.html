@@ -1,0 +1,75 @@
+<app-admin-panel
+  title="Acessos"
+  description="Visão geral das métricas de acesso ao site"
+>
+  <div class="time-range-selector">
+    <button
+      class="time-range-btn"
+      [class.active]="isTimeRangeActive('today')"
+      (click)="setTimeRange('today')"
+    >
+      Hoje
+    </button>
+    <button
+      class="time-range-btn"
+      [class.active]="isTimeRangeActive('last7days')"
+      (click)="setTimeRange('last7days')"
+    >
+      Últimos 7 dias
+    </button>
+    <button
+      class="time-range-btn"
+      [class.active]="isTimeRangeActive('last30days')"
+      (click)="setTimeRange('last30days')"
+    >
+      Últimos 30 dias
+    </button>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-icon page-views">📊</div>
+      <div class="metric-content">
+        <p class="metric-label">Visualizações de Página</p>
+        <p class="metric-value">{{ pageViews() }}</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon visitors">👥</div>
+      <div class="metric-content">
+        <p class="metric-label">Visitantes Únicos</p>
+        <p class="metric-value">{{ uniqueVisitors() }}</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon sessions">🔄</div>
+      <div class="metric-content">
+        <p class="metric-label">Sessões</p>
+        <p class="metric-value">{{ sessions() }}</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon bounce-rate">📉</div>
+      <div class="metric-content">
+        <p class="metric-label">Taxa de Rejeição</p>
+        <p class="metric-value">{{ bounceRate() }}</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon duration">⏱️</div>
+      <div class="metric-content">
+        <p class="metric-label">Duração Média da Sessão</p>
+        <p class="metric-value">{{ avgSessionDuration() }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-note">
+    <p>📌 Dados simulados. A integração com Google Analytics será implementada em breve.</p>
+  </div>
+</app-admin-panel>
+

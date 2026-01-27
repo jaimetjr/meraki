@@ -1,0 +1,9 @@
+<div class="form-actions">
+  <button type="button" class="btn-light" (click)="cancel.emit()">
+    {{ cancelLabel() }}
+  </button>
+  <button type="submit" class="btn-primary" [disabled]="disableSave()">
+    {{ saveLabel() }}
+  </button>
+</div>
+

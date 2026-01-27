@@ -1,0 +1,41 @@
+<section id="services" class="w-full section-padding">
+  <div class="container-max">
+    <div class="flex flex-col items-center justify-center space-y-4 text-center">
+      <div class="space-y-2 fade-in">
+        <div class="inline-block rounded-lg bg-green-100 px-3 py-1 text-sm text-green-700" #titleEffect data-scroll-anchor>
+          Nossos Serviços
+        </div>
+        <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-green-800">
+          Tratamentos e Terapias
+        </h2>
+        <p class="max-w-[900px] text-gray-600 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+          Oferecemos uma variedade de serviços terapêuticos para atender às suas necessidades específicas.
+        </p>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="mx-auto grid max-w-5xl gap-6 py-12 lg:grid-cols-2">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="border rounded-lg p-6 bg-white shadow-sm">
+            <div class="w-full h-48 skeleton rounded-lg mb-4"></div>
+            <div class="w-3/4 h-6 skeleton rounded mb-2"></div>
+            <div class="w-full space-y-2">
+              <div class="w-full h-3 skeleton rounded"></div>
+              <div class="w-5/6 h-3 skeleton rounded"></div>
+              <div class="w-4/5 h-3 skeleton rounded"></div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="mx-auto grid max-w-5xl gap-6 py-12 lg:grid-cols-2">
+        @for (service of services(); track service.id) {
+          <app-service-card [service]="service"></app-service-card>
+        }
+      </div>
+    }
+  </div>
+</section>
+
+

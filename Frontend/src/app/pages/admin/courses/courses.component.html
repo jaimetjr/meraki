@@ -1,0 +1,235 @@
+<app-admin-panel
+  title="Cursos"
+  description="Gerencie cursos, modalidades e status."
+>
+  <div class="actions">
+    <button class="btn-primary" (click)="startCreate()">Novo curso</button>
+  </div>
+
+  @if (error()) {
+    <div class="alert">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <app-admin-loading></app-admin-loading>
+  } @else if (courses().length === 0) {
+    <app-admin-empty message="Nenhum curso cadastrado."></app-admin-empty>
+  } @else {
+    <div class="table">
+      <div class="table-head">
+        <div>Título</div>
+        <div>Status</div>
+        <div>Preço</div>
+        <div>Ações</div>
+      </div>
+      @for (item of courses(); track item.id) {
+        <div class="table-row">
+          <div>
+            <p class="title">{{ item.title }}</p>
+            <p class="muted">{{ item.instructor }}</p>
+          </div>
+          <div>{{ getStatusDisplayName(item.status) }}</div>
+          <div>{{ item.price | currency:item.currency || 'BRL' }}</div>
+          <div class="row-actions">
+            <button class="btn-ghost" (click)="startEdit(item)">Editar</button>
+            <button class="btn-danger" (click)="confirmDelete(item.id!)">Excluir</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (editingId() !== null || isCreating()) {
+    <app-admin-form-modal
+      [title]="editingId() ? 'Editar curso' : 'Novo curso'"
+      [visible]="true"
+      (close)="cancelEdit()"
+    >
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+        <label>
+          <span>Título*</span>
+          <input 
+            formControlName="title"
+            [class.border-red-500]="form.get('title')?.invalid && form.get('title')?.touched"
+          />
+          @if (form.get('title')?.invalid && form.get('title')?.touched) {
+            <p class="text-sm text-red-600">
+              @if (form.get('title')?.errors?.['required']) {
+                Título é obrigatório.
+              } @else if (form.get('title')?.errors?.['maxlength']) {
+                Título deve ter no máximo 200 caracteres.
+              }
+            </p>
+          }
+        </label>
+        <label>
+          <span>Descrição*</span>
+          <input 
+            formControlName="description"
+            [class.border-red-500]="form.get('description')?.invalid && form.get('description')?.touched"
+          />
+          @if (form.get('description')?.invalid && form.get('description')?.touched) {
+            <p class="text-sm text-red-600">
+              @if (form.get('description')?.errors?.['required']) {
+                Descrição é obrigatória.
+              } @else if (form.get('description')?.errors?.['maxlength']) {
+                Descrição deve ter no máximo 1000 caracteres.
+              }
+            </p>
+          }
+        </label>
+        <label>
+          <span>Imagem@if (!editingId()) { *}</span>
+          <input 
+            type="file"
+            accept="image/*"
+            (change)="onImageFileChange($event)"
+            [class.border-red-500]="form.get('imageFile')?.invalid && form.get('imageFile')?.touched"
+          />
+          @if (form.get('imageFile')?.invalid && form.get('imageFile')?.touched) {
+            <p class="text-sm text-red-600">
+              É necessário fazer upload de uma imagem.
+            </p>
+          }
+          <p class="text-xs text-gray-500 mt-1">
+            @if (editingId()) {
+              Faça upload de uma nova imagem para substituir a atual (opcional)
+            } @else {
+              Faça upload de uma imagem para o curso
+            }
+          </p>
+        </label>
+        <label>
+          <span>Instrutor*</span>
+          <input 
+            formControlName="instructor"
+            [class.border-red-500]="form.get('instructor')?.invalid && form.get('instructor')?.touched"
+          />
+          @if (form.get('instructor')?.invalid && form.get('instructor')?.touched) {
+            <p class="text-sm text-red-600">
+              Instrutor é obrigatório.
+            </p>
+          }
+        </label>
+        <label>
+          <span>Tipo*</span>
+          <select 
+            formControlName="type"
+            [class.border-red-500]="form.get('type')?.invalid && form.get('type')?.touched"
+          >
+            @for (type of getTypeOptions(); track type) {
+              <option [value]="type">{{ type }}</option>
+            }
+          </select>
+          @if (form.get('type')?.invalid && form.get('type')?.touched) {
+            <p class="text-sm text-red-600">
+              Tipo é obrigatório.
+            </p>
+          }
+        </label>
+        <label>
+          <span>Status*</span>
+          <select 
+            formControlName="status"
+            [class.border-red-500]="form.get('status')?.invalid && form.get('status')?.touched"
+          >
+            @for (status of getStatusOptions(); track status) {
+              <option [value]="status">{{ getStatusDisplayName(status) }}</option>
+            }
+          </select>
+          @if (form.get('status')?.invalid && form.get('status')?.touched) {
+            <p class="text-sm text-red-600">
+              Status é obrigatório.
+            </p>
+          }
+        </label>
+        <label>
+          <span>Preço</span>
+          <input 
+            type="number" 
+            formControlName="price"
+            [class.border-red-500]="form.get('price')?.invalid && form.get('price')?.touched"
+          />
+          @if (form.get('price')?.invalid && form.get('price')?.touched) {
+            <p class="text-sm text-red-600">
+              Preço deve ser maior ou igual a zero.
+            </p>
+          }
+        </label>
+        <label>
+          <span>Moeda</span>
+          <input formControlName="currency" />
+        </label>
+        <label>
+          <span>Data de Início</span>
+          <input 
+            type="datetime-local" 
+            formControlName="startDate"
+            [class.border-red-500]="form.get('startDate')?.invalid && form.get('startDate')?.touched"
+          />
+          @if (form.get('startDate')?.invalid && form.get('startDate')?.touched) {
+            <p class="text-sm text-red-600">
+              Data de início inválida.
+            </p>
+          }
+        </label>
+        <label>
+          <span>Data de Término (opcional)</span>
+          <input 
+            type="datetime-local" 
+            formControlName="endDate"
+            [class.border-red-500]="(form.get('endDate')?.invalid && form.get('endDate')?.touched) || form.errors?.['dateRange']"
+          />
+          @if (form.get('endDate')?.invalid && form.get('endDate')?.touched) {
+            <p class="text-sm text-red-600">
+              Data de término inválida.
+            </p>
+          }
+          @if (form.errors?.['dateRange'] && (form.get('endDate')?.touched || form.get('startDate')?.touched)) {
+            <p class="text-sm text-red-600">
+              {{ form.errors?.['dateRange']?.message || 'Data de término deve ser maior ou igual à data de início.' }}
+            </p>
+          }
+        </label>
+        <label>
+          <span>Modalidade</span>
+          <select formControlName="modality">
+            @for (modality of getModalityOptions(); track modality) {
+              <option [value]="modality">{{ modality }}</option>
+            }
+          </select>
+        </label>
+        <label class="col-span-2">
+          <span>Link</span>
+          <input 
+            formControlName="link"
+            [class.border-red-500]="form.get('link')?.invalid && form.get('link')?.touched"
+          />
+          @if (form.get('link')?.invalid && form.get('link')?.touched) {
+            <p class="text-sm text-red-600">
+              Informe uma URL válida.
+            </p>
+          }
+        </label>
+
+        <app-admin-form-actions
+          [disableSave]="saving()"
+          (cancel)="cancelEdit()"
+          saveLabel="Salvar curso"
+        ></app-admin-form-actions>
+      </form>
+    </app-admin-form-modal>
+  }
+
+  @if (confirmId()) {
+    <app-admin-confirm-dialog
+      title="Excluir curso"
+      message="Esta ação não pode ser desfeita."
+      confirmLabel="Excluir"
+      cancelLabel="Cancelar"
+      (confirm)="delete(confirmId()!)"
+      (cancel)="confirmId.set(null)"
+    />
+  }
+</app-admin-panel>
+
