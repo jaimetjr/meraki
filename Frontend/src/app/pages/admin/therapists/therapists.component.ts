@@ -10,6 +10,7 @@ import { AdminFormActionsComponent } from "../../../components/admin/admin-form-
 import { AdminFormModalComponent } from "../../../components/admin/admin-form-modal/admin-form-modal.component";
 import { TherapistsService } from "../../../services/therapists.service";
 import { SpecialtiesService } from "../../../services/specialties.service";
+import { ConsultorioMEService, type ConsultorioMEProfessional } from "../../../services/consultoriome.service";
 import { ToastService } from "../../../services/toast.service";
 import type { Therapist } from "../../../models/therapist.model";
 import type { Specialty } from "../../../models/specialty.model";
@@ -35,10 +36,12 @@ export class TherapistsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private therapistsService = inject(TherapistsService);
   private specialtiesService = inject(SpecialtiesService);
+  private consultorioMEService = inject(ConsultorioMEService);
   private toastService = inject(ToastService);
 
   therapists = signal<Therapist[]>([]);
   specialties = signal<Specialty[]>([]);
+  professionals = signal<ConsultorioMEProfessional[]>([]);
   loading = signal(false);
   saving = signal(false);
   error = signal<string | null>(null);
@@ -53,11 +56,13 @@ export class TherapistsComponent implements OnInit {
     imageFile: [null as File | null, Validators.required],
     experience: ["", Validators.required],
     education: ["", Validators.required],
+    proId: [""],
     specialtyIds: [[] as string[]],
   });
 
   ngOnInit(): void {
     this.loadAll();
+    this.loadProfessionals();
   }
 
   loadAll() {
@@ -71,6 +76,16 @@ export class TherapistsComponent implements OnInit {
     this.specialtiesService.list().subscribe({
       next: (data) => this.specialties.set(data),
       error: () => {},
+    });
+  }
+
+  loadProfessionals() {
+    this.consultorioMEService.getProfessionals().subscribe({
+      next: (data) => this.professionals.set(data),
+      error: () => {
+        // Silently fail - professionals are optional
+        console.warn("Failed to load professionals from ConsultorioME");
+      },
     });
   }
 
@@ -93,6 +108,7 @@ export class TherapistsComponent implements OnInit {
       imageFile: null,
       experience: item.experience,
       education: item.education,
+      proId: item.proId || "",
       specialtyIds: item.specialties?.map(s => s.id).filter((id): id is string => Boolean(id)) || [],
     });
     // Make image file optional when editing (image already exists)
@@ -123,6 +139,11 @@ export class TherapistsComponent implements OnInit {
     formData.append('bio', value.bio || '');
     formData.append('experience', value.experience || '');
     formData.append('education', value.education || '');
+    
+    // Add ProId if provided
+    if (value.proId) {
+      formData.append('proId', value.proId);
+    }
     
     // Add specialties - send as specialtiesJson with JSON string
     const selectedSpecialties = (value.specialtyIds || []).filter(Boolean);

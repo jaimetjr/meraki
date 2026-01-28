@@ -1,4 +1,4 @@
-﻿using Domain.Interfaces;
+using Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,13 +14,14 @@ namespace Domain.Entities
         public string? Image { get; private set; }
         public string Experience { get; private set; }
         public string Education { get; private set; }
+        public string? ProId { get; private set; }
         public List<Specialty> Specialties { get; private set; } = new();
         public bool IsActive { get; private set; }
 
         // EF Core parameterless constructor
         private Therapist() { }
 
-        public Therapist(string name, string bio, string? image, string experience, string education)
+        public Therapist(string name, string bio, string? image, string experience, string education, string? proId = null)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required", nameof(name));
             if (string.IsNullOrWhiteSpace(bio)) throw new ArgumentException("Bio is required", nameof(bio));
@@ -34,6 +35,7 @@ namespace Domain.Entities
             Image = string.IsNullOrWhiteSpace(image) ? null : image;
             Experience = experience;
             Education = education;
+            ProId = string.IsNullOrWhiteSpace(proId) ? null : proId;
             IsActive = true;
             CreatedAt = DateTime.UtcNow;
             UpdatedAt = DateTime.UtcNow;
@@ -49,7 +51,7 @@ namespace Domain.Entities
             }
         }
 
-        public void Update(string name, string bio, string? image, string experience, string education)
+        public void Update(string name, string bio, string? image, string experience, string education, string? proId = null)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required", nameof(name));
             if (string.IsNullOrWhiteSpace(bio)) throw new ArgumentException("Bio is required", nameof(bio));
@@ -63,6 +65,7 @@ namespace Domain.Entities
             Image = string.IsNullOrWhiteSpace(image) ? null : image;
             Experience = experience;
             Education = education;
+            ProId = string.IsNullOrWhiteSpace(proId) ? null : proId;
             MarkAsModified();
         }
 

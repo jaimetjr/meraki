@@ -144,6 +144,18 @@
           </select>
           <p class="text-xs text-gray-500 mt-1">Mantenha Ctrl (ou Cmd no Mac) pressionado para selecionar múltiplas opções</p>
         </label>
+        <label>
+          <span>Profissional ConsultorioME</span>
+          <select formControlName="proId">
+            <option value="">Nenhum</option>
+            @for (professional of professionals(); track professional.proId) {
+              <option [value]="professional.proId">
+                {{ professional.name }}@if (professional.speciality) { - {{ professional.speciality }}}
+              </option>
+            }
+          </select>
+          <p class="text-xs text-gray-500 mt-1">Selecione um profissional do ConsultorioME (opcional)</p>
+        </label>
 
         <app-admin-form-actions
           [disableSave]="saving()"

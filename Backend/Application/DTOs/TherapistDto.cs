@@ -1,4 +1,4 @@
-﻿namespace Application.DTOs
+namespace Application.DTOs
 {
     public class TherapistDto
     {
@@ -8,6 +8,7 @@
         public string? Image { get; set; }
         public string Experience { get; set; } = default!;
         public string Education { get; set; } = default!;
+        public string? ProId { get; set; }
         public List<SpecialtyDto> Specialties { get; set; } = new();
 
     }

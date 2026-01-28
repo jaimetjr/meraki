@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -25,6 +25,9 @@ namespace Infrastructure.Configuration.EntityConfigurations
 
             builder.Property(t => t.Education)
                 .IsRequired();
+
+            builder.Property(t => t.ProId)
+                .HasMaxLength(200);
 
             builder.HasMany(t => t.Specialties)
                 .WithMany()

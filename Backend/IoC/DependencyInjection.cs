@@ -1,4 +1,4 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using Application.Interfaces;
 using Application.Mapping;
 using Application.Services;
@@ -7,6 +7,7 @@ using Azure.Storage.Blobs;
 using Domain.Interfaces;
 using FluentValidation;
 using Infrastructure.Data;
+using Infrastructure.HttpClients;
 using Infrastructure.Repositories;
 using Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
@@ -82,6 +83,19 @@ namespace IoC
                 var serviceClient = new BlobServiceClient(connectionString);
                 return serviceClient.GetBlobContainerClient(containerName);
             });
+
+            // ConsultorioME API
+            services.AddHttpClient("ConsultorioME", (serviceProvider, client) =>
+            {
+                var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+                var baseUrl = configuration["ConsultorioME:BaseUrl"] 
+                    ?? "https://api.consultoriome.com/v1/api";
+                client.BaseAddress = new Uri(baseUrl);
+                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                client.Timeout = TimeSpan.FromSeconds(100);
+            });
+
+            services.AddScoped<IConsultorioMEService, ConsultorioMEService>();
 
             return services;
         }

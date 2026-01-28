@@ -7,6 +7,7 @@ export interface Therapist {
   image: string;
   experience: string;
   education: string;
+  proId?: string;
   specialty?: string;
   specialties: Specialty[];
 }

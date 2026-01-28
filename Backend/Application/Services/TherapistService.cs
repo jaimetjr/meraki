@@ -1,4 +1,4 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Entities;
@@ -63,7 +63,8 @@ namespace Application.Services
                 dto.Bio,
                 imageUrl,
                 dto.Experience,
-                dto.Education
+                dto.Education,
+                dto.ProId
             );
             
             // Handle optional Specialties collection
@@ -111,7 +112,7 @@ namespace Application.Services
                 imageUrl = existing.Image;
             }
 
-            existing.Update(dto.Name, dto.Bio, imageUrl, dto.Experience, dto.Education);
+            existing.Update(dto.Name, dto.Bio, imageUrl, dto.Experience, dto.Education, dto.ProId);
 
             if (dto.Specialties != null)
             {
