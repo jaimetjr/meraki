@@ -4,7 +4,7 @@ export interface Therapist {
   id?: string;
   name: string;
   bio: string;
-  image: string;
+  image?: string | null;
   experience: string;
   education: string;
   proId?: string;

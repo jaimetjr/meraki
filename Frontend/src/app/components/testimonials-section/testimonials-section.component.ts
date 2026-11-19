@@ -1,9 +1,11 @@
 import { Component, input } from "@angular/core"
+import { ImageOrInitialsComponent } from "../image-or-initials/image-or-initials.component"
 import type { Testimonial } from "../../models/testimonial.model"
 
 @Component({
   selector: "app-testimonials-section",
   standalone: true,
+  imports: [ImageOrInitialsComponent],
   templateUrl: "./testimonials-section.component.html",
   styleUrl: "./testimonials-section.component.css",
 })

@@ -82,7 +82,7 @@
           <span>Imagem@if (!editingId()) { *}</span>
           <input 
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             (change)="onImageFileChange($event)"
             [class.border-red-500]="form.get('imageFile')?.invalid && form.get('imageFile')?.touched"
           />

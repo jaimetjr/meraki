@@ -1,11 +1,11 @@
 import { Component, input } from "@angular/core"
-import { NgOptimizedImage } from "@angular/common"
+import { ImageOrInitialsComponent } from "../image-or-initials/image-or-initials.component"
 import type { Therapist } from "../../models/therapist.model"
 
 @Component({
   selector: "app-therapist-card",
   standalone: true,
-  imports: [NgOptimizedImage],
+  imports: [ImageOrInitialsComponent],
   templateUrl: "./therapist-card.component.html",
   styleUrl: "./therapist-card.component.css",
 })

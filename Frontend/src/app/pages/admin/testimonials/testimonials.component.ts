@@ -43,8 +43,8 @@ export class TestimonialsComponent implements OnInit {
 
   form = this.fb.group({
     authorName: ["", [Validators.required, Validators.maxLength(100)]],
-    authorAvatarUrl: [""], // Keep for existing data, but not used for new uploads
-    imageFile: [null as File | null, Validators.required],
+    authorAvatarUrl: [""], // Shown as the current photo while editing; never sent back
+    imageFile: [null as File | null], // Optional: without a photo the site shows the author's initials
     authorBadge: [""],
     rating: [5, [Validators.required, Validators.min(1), Validators.max(5)]],
     content: ["", [Validators.required, Validators.maxLength(1000)]],
@@ -68,9 +68,6 @@ export class TestimonialsComponent implements OnInit {
     this.editingId.set(null);
     this.isCreating.set(true);
     this.form.reset({ rating: 5 });
-    // Require image file for new testimonials
-    this.form.get('imageFile')?.setValidators(Validators.required);
-    this.form.get('imageFile')?.updateValueAndValidity();
   }
 
   startEdit(item: Testimonial) {
@@ -84,18 +81,12 @@ export class TestimonialsComponent implements OnInit {
       rating: item.rating,
       content: item.content,
     });
-    // Make image file optional when editing (image already exists)
-    this.form.get('imageFile')?.clearValidators();
-    this.form.get('imageFile')?.updateValueAndValidity();
   }
 
   cancelEdit() {
     this.editingId.set(null);
     this.isCreating.set(false);
     this.form.reset({ rating: 5 });
-    // Reset image file validation
-    this.form.get('imageFile')?.setValidators(Validators.required);
-    this.form.get('imageFile')?.updateValueAndValidity();
   }
 
   submit() {
@@ -116,15 +107,9 @@ export class TestimonialsComponent implements OnInit {
       formData.append('authorBadge', value.authorBadge);
     }
     
-    // Always send AuthorAvatarUrl (PascalCase as expected by backend) - as file if provided, or existing URL when editing
+    // Only a new file is sent; without one the API keeps the current photo.
     if (value.imageFile) {
       formData.append('image', value.imageFile);
-    } else if (this.editingId() && value.authorAvatarUrl) {
-      // When editing without new image, send existing URL as string
-      formData.append('image', value.authorAvatarUrl);
-    } else {
-      // When creating without file (shouldn't happen due to validation, but backend requires the field)
-      formData.append('image', '');
     }
 
     this.saving.set(true);

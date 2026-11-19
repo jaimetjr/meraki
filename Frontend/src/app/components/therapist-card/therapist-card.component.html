@@ -1,12 +1,11 @@
 <div class="flex flex-col items-center space-y-4 border rounded-lg p-6 bg-white shadow-sm card-hover">
-  <img 
-    [ngSrc]="therapist().image" 
-    [alt]="'Foto de ' + therapist().name" 
-    width="96" 
-    height="96" 
-    class="w-24 h-24 rounded-full object-cover shadow-md"
-    loading="lazy"
-  >
+  <app-image-or-initials
+    [src]="therapist().image"
+    [alt]="'Foto de ' + therapist().name"
+    [label]="therapist().name"
+    imageClass="w-24 h-24 rounded-full object-cover shadow-md"
+    placeholderClass="w-24 h-24 rounded-full shadow-md flex items-center justify-center bg-green-100 text-green-700 text-2xl font-semibold"
+  ></app-image-or-initials>
   <div class="text-center space-y-2">
     <h3 class="text-lg font-bold text-green-700">{{therapist().name}}</h3>
     <p class="text-sm text-green-600 font-medium">{{therapist().specialty || (therapist().specialties && therapist().specialties.length > 0 ? therapist().specialties[0].name : "")}}</p>

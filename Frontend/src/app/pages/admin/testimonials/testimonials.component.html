@@ -63,23 +63,17 @@
           }
         </label>
         <label>
-          <span>Avatar@if (!editingId()) { *}</span>
-          <input 
+          <span>Avatar</span>
+          <input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             (change)="onImageFileChange($event)"
-            [class.border-red-500]="form.get('imageFile')?.invalid && form.get('imageFile')?.touched"
           />
-          @if (form.get('imageFile')?.invalid && form.get('imageFile')?.touched) {
-            <p class="text-sm text-red-600">
-              É necessário fazer upload de uma imagem.
-            </p>
-          }
           <p class="text-xs text-gray-500 mt-1">
             @if (editingId()) {
-              Faça upload de uma nova imagem para substituir a atual (opcional)
+              Opcional: envie uma nova imagem para substituir a atual (JPG, PNG ou WEBP, até 5 MB)
             } @else {
-              Faça upload de uma imagem para o depoimento
+              Opcional: sem foto, o site mostra as iniciais do autor (JPG, PNG ou WEBP, até 5 MB)
             }
           </p>
         </label>

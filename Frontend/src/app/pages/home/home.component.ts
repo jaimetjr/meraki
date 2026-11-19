@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop"
 import type { Therapist } from "../../models/therapist.model"
 import type { Service } from "../../models/service.model"
 import type { Testimonial } from "../../models/testimonial.model"
-import { TherapistsService, ServiceManager, TestimonialsService } from "../../services"
+import { TherapistsService, ServicesService, TestimonialsService } from "../../services"
 import { MetaService } from "../../services/meta.service"
 import { of } from "rxjs"
 import { catchError } from "rxjs/operators"
@@ -36,7 +36,7 @@ import { TestimonialsSectionComponent } from "../../components/testimonials-sect
 })
 export class HomeComponent implements OnInit {
   private therapistsService: TherapistsService = inject(TherapistsService)
-  private serviceManager: ServiceManager = inject(ServiceManager)
+  private servicesService = inject(ServicesService)
   private testimonialsService: TestimonialsService = inject(TestimonialsService)
   private metaService = inject(MetaService)
   private destroyRef = inject(DestroyRef)
@@ -69,7 +69,7 @@ export class HomeComponent implements OnInit {
         this.checkLoading()
       })
 
-    this.serviceManager
+    this.servicesService
       .list()
       .pipe(
         takeUntilDestroyed(this.destroyRef),

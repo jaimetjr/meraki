@@ -5,7 +5,7 @@ export interface Service {
   id?: string;
   name: string;
   description: string;
-  image: string;
+  image?: string | null;
   longDescription: string;
   duration: string;
   price: number;

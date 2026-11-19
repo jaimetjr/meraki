@@ -1,12 +1,12 @@
 import { Component, input, inject } from "@angular/core"
-import { NgOptimizedImage } from "@angular/common"
+import { ImageOrInitialsComponent } from "../image-or-initials/image-or-initials.component"
 import type { Service } from "../../models/service.model"
 import { DialogService } from "../../services/dialog.service"
 
 @Component({
   selector: "app-service-card",
   standalone: true,
-  imports: [NgOptimizedImage],
+  imports: [ImageOrInitialsComponent],
   templateUrl: "./service-card.component.html",
   styleUrl: "./service-card.component.css",
 })

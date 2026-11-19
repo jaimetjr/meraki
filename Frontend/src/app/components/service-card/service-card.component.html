@@ -1,12 +1,11 @@
 <div class="border rounded-lg p-6 shadow-sm bg-white card-hover">
-  <img 
-    [ngSrc]="service().image" 
-    [alt]="'Imagem do serviço ' + service().name" 
-    width="400" 
-    height="192" 
-    class="w-full h-48 object-cover rounded-lg mb-4"
-    loading="lazy"
-  >
+  <app-image-or-initials
+    [src]="service().image"
+    [alt]="'Imagem do serviço ' + service().name"
+    [label]="service().name"
+    imageClass="w-full h-48 object-cover rounded-lg mb-4"
+    placeholderClass="w-full h-48 rounded-lg mb-4 flex items-center justify-center bg-green-50 text-green-700 text-4xl font-semibold"
+  ></app-image-or-initials>
   <div class="space-y-3">
     <div class="flex items-center justify-between">
       <h3 class="text-xl font-bold text-green-700">{{service().name}}</h3>

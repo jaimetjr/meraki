@@ -6,6 +6,7 @@ import { LoggingService } from '../services/logging.service';
 
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 1000;
+const SAFE_METHODS = ['GET', 'HEAD'];
 const RETRIABLE_STATUS_CODES = [
   HttpStatusCode.RequestTimeout,
   HttpStatusCode.InternalServerError,
@@ -26,8 +27,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     retry({
       count: MAX_RETRIES,
       delay: (error: HttpErrorResponse, retryCount: number) => {
-        // Only retry for specific status codes
-        if (!RETRIABLE_STATUS_CODES.includes(error.status)) {
+        // Only retry reads: repeating a POST/PUT/DELETE can create duplicates or repeat side effects.
+        if (!SAFE_METHODS.includes(req.method) || !RETRIABLE_STATUS_CODES.includes(error.status)) {
           return throwError(() => error);
         }
         loggingService.debug(`Retrying request (${retryCount}/${MAX_RETRIES}): ${req.url}`);

@@ -18,7 +18,7 @@ export class ServicesService {
   }
 
   getByCategory(categoryName: string): Observable<Service[]> {
-    return this.http.get<Service[]>(`${this.baseUrl}/category/${categoryName}`);
+    return this.http.get<Service[]>(`${this.baseUrl}/category/${encodeURIComponent(categoryName)}`);
   }
 
   create(payload: FormData): Observable<Service> {

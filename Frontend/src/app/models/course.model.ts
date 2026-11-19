@@ -6,7 +6,7 @@ export interface Course {
   id?: string;
   title: string;
   description: string;
-  image: string;
+  image?: string | null;
   instructor: string;
   type: CourseType | string;
   status: CourseStatus | string;
