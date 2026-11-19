@@ -71,3 +71,21 @@
   gap: 0.5rem;
   margin-top: 0.75rem;
 }
+
+/* Same button look as the other admin pages (each page defines its own; see follow-ups). */
+.btn-ghost {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.btn-danger {
+  border: none;
+  background: #dc2626;
+  color: #fff;
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
