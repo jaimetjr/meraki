@@ -7,10 +7,8 @@ using API.Features.Specialties;
 using API.Features.Testimonials;
 using API.Features.Therapists;
 using API.Features.Users;
-using Azure.Storage.Blobs;
 using Infrastructure.ConsultorioME;
 using Infrastructure.Data;
-using Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -18,7 +16,7 @@ namespace API.Common;
 
 public static class ServiceRegistration
 {
-    public static IServiceCollection AddMerakiServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddMerakiServices(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured");
@@ -43,14 +41,7 @@ public static class ServiceRegistration
         services.AddScoped<SpecialtyService>();
         services.AddScoped<TestimonialService>();
 
-        // File storage (Azure Blob)
-        services.AddScoped<IFileStorageService, AzureBlobStorageService>();
-        services.AddSingleton(provider =>
-        {
-            var config = provider.GetRequiredService<IConfiguration>();
-            return new BlobServiceClient(config["AzureBlobStorage:ConnectionString"])
-                .GetBlobContainerClient(config["AzureBlobStorage:ContainerName"]);
-        });
+        services.AddFileStorage(configuration, environment);
 
         // ConsultorioME (external scheduling platform)
         services.AddHttpClient("ConsultorioME", (provider, client) =>

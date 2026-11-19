@@ -332,7 +332,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("AuthorAvatarUrl")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("AuthorBadge")

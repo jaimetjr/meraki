@@ -4,6 +4,7 @@ using API.Features.Categories;
 using Domain.Entities;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace API.Features.Services;
 
@@ -21,11 +22,13 @@ public class ServiceDto
 
     /// <summary>JSON object in the "category" form field; only the id is used.</summary>
     [ModelBinder(typeof(FormJsonModelBinder), Name = "category")]
+    [ValidateNever]
     public CategoryDto? Category { get; set; }
 
     /// <summary>JSON array in the "benefits" form field; only the ids are used.
     /// Omitted (null) on update keeps the current benefits.</summary>
     [ModelBinder(typeof(FormJsonModelBinder), Name = "benefits")]
+    [ValidateNever]
     public List<BenefitDto>? Benefits { get; set; }
 }
 

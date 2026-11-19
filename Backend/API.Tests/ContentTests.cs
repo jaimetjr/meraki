@@ -105,13 +105,12 @@ public class ContentTests(ApiFactory api)
         var author = Http.Unique("Author");
 
         var response = await client.PostAsync("/api/testimonials", Http.Form(
-            ("AuthorName", author), ("AuthorAvatarUrl", "https://example.com/a.jpg"), ("Rating", "4"), ("Content", "Great")));
+            ("AuthorName", author), ("Rating", "4"), ("Content", "Great")));
 
         var id = (await response.Json()).Id();
         var testimonial = await api.CreateClient().GetJson($"/api/testimonials/{id}");
         Assert.Equal(author, testimonial.Str("authorName"));
         Assert.Equal(4, testimonial.GetProperty("rating").GetInt32());
-        Assert.Equal("https://example.com/a.jpg", testimonial.Str("authorAvatarUrl"));
 
         Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync($"/api/testimonials/{id}")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await api.CreateClient().GetAsync($"/api/testimonials/{id}")).StatusCode);

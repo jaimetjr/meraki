@@ -12,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
 builder.Services.AddOpenApi();
-builder.Services.AddMerakiServices(configuration);
+builder.Services.AddMerakiServices(configuration, builder.Environment);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>())
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -75,6 +75,7 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     RequestCultureProviders = [],
 });
 
+app.UseLocalUploads();
 app.UseRouting();
 app.UseCors("FrontendPolicy");
 app.UseAuthentication();

@@ -1,12 +1,11 @@
 using API.Common;
 using Domain.Entities;
 using Infrastructure.Data;
-using Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Features.Therapists;
 
-public class TherapistService(AppDbContext db, IFileStorageService fileStorage)
+public class TherapistService(AppDbContext db, ImageUploads images)
 {
     private IQueryable<Therapist> Therapists => db.Therapists.Include(t => t.Specialties);
 
@@ -23,11 +22,9 @@ public class TherapistService(AppDbContext db, IFileStorageService fileStorage)
 
     public async Task<TherapistDto> CreateAsync(TherapistDto dto, IFormFile? image = null)
     {
-        var imageUrl = dto.Image;
-        if (image is { Length: > 0 })
-            imageUrl = await fileStorage.UploadAsync(image, "therapists");
+        var picture = await images.ApplyAsync(null, image, removeImage: false, "therapists");
 
-        var therapist = new Therapist(dto.Name, dto.Bio, imageUrl, dto.Experience, dto.Education, dto.ProId);
+        var therapist = new Therapist(dto.Name, dto.Bio, picture.Url, dto.Experience, dto.Education, dto.ProId);
         therapist.SetSpecialties(await db.Specialties.LoadAllByIdAsync(dto.Specialties?.Select(s => s.Id), "specialties"));
 
         db.Therapists.Add(therapist);
@@ -35,20 +32,18 @@ public class TherapistService(AppDbContext db, IFileStorageService fileStorage)
         return therapist.ToDto();
     }
 
-    public async Task<bool> UpdateAsync(Guid id, TherapistDto dto, IFormFile? image = null)
+    public async Task<bool> UpdateAsync(Guid id, TherapistDto dto, IFormFile? image = null, bool removeImage = false)
     {
         var therapist = await Therapists.FirstOrDefaultAsync(t => t.Id == id);
         if (therapist == null) return false;
 
-        var imageUrl = therapist.Image;
-        if (image is { Length: > 0 })
-            imageUrl = await fileStorage.UploadAsync(image, "therapists");
-
-        therapist.Update(dto.Name, dto.Bio, imageUrl, dto.Experience, dto.Education, dto.ProId);
+        var picture = await images.ApplyAsync(therapist.Image, image, removeImage, "therapists");
+        therapist.Update(dto.Name, dto.Bio, picture.Url, dto.Experience, dto.Education, dto.ProId);
         if (dto.Specialties != null)
             therapist.SetSpecialties(await db.Specialties.LoadAllByIdAsync(dto.Specialties.Select(s => s.Id), "specialties"));
 
         await db.SaveChangesAsync();
+        await images.CommitAsync(picture);
         return true;
     }
 

@@ -3,6 +3,7 @@ using API.Features.Specialties;
 using Domain.Entities;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace API.Features.Therapists;
 
@@ -19,6 +20,7 @@ public class TherapistDto
     /// <summary>Sent as a JSON array in the "specialties" form field; only the ids are used.
     /// Omitted (null) on update keeps the current specialties.</summary>
     [ModelBinder(typeof(FormJsonModelBinder), Name = "specialties")]
+    [ValidateNever]
     public List<SpecialtyDto>? Specialties { get; set; }
 }
 

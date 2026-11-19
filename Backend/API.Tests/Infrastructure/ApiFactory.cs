@@ -25,6 +25,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     private readonly PostgreSqlContainer _db = new PostgreSqlBuilder("postgres:18-alpine").Build();
     private readonly ConcurrentDictionary<UserRole, Task<string>> _tokens = new();
 
+    /// <summary>Where uploaded images land during tests (local-disk storage provider).</summary>
+    public string UploadsRoot { get; } = Path.Combine(Path.GetTempPath(), $"meraki-tests-{Guid.NewGuid():N}");
+    public const string UploadsBaseUrl = "http://localhost/uploads";
+
     public async ValueTask InitializeAsync()
     {
         await _db.StartAsync();
@@ -36,8 +40,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         Environment.SetEnvironmentVariable("Jwt__Issuer", "MerakiAPI");
         Environment.SetEnvironmentVariable("Jwt__Audience", "MerakiAPI");
         Environment.SetEnvironmentVariable("Jwt__ExpirationMinutes", "60");
-        Environment.SetEnvironmentVariable("AzureBlobStorage__ConnectionString", "UseDevelopmentStorage=true");
-        Environment.SetEnvironmentVariable("AzureBlobStorage__ContainerName", "test");
+        Environment.SetEnvironmentVariable("Storage__Provider", "Local");
+        Environment.SetEnvironmentVariable("Storage__Local__RootPath", UploadsRoot);
+        Environment.SetEnvironmentVariable("Storage__PublicBaseUrl", UploadsBaseUrl);
 
         var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(_db.GetConnectionString()).Options;
         await using var context = new AppDbContext(options);
@@ -48,7 +53,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         await base.DisposeAsync();
         await _db.DisposeAsync();
+        if (Directory.Exists(UploadsRoot)) Directory.Delete(UploadsRoot, recursive: true);
     }
+
+    /// <summary>Maps a URL returned by the API to the file it points at in <see cref="UploadsRoot"/>.</summary>
+    public string UploadedFilePath(string url) =>
+        Path.Combine(UploadsRoot, url[(UploadsBaseUrl.Length + 1)..].Replace('/', Path.DirectorySeparatorChar));
 
     public AppDbContext CreateDbContext()
     {

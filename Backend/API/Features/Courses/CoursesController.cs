@@ -30,8 +30,8 @@ public class CoursesController(CourseService service) : ControllerBase
 
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin,SuperAdmin")]
-    public async Task<IActionResult> Update(Guid id, [FromForm] CourseDto dto, IFormFile? image = null) =>
-        await service.UpdateAsync(id, dto, image) ? NoContent() : NotFound();
+    public async Task<IActionResult> Update(Guid id, [FromForm] CourseDto dto, IFormFile? image = null, [FromForm] bool removeImage = false) =>
+        await service.UpdateAsync(id, dto, image, removeImage) ? NoContent() : NotFound();
 
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin,SuperAdmin")]

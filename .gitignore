@@ -425,3 +425,5 @@ Backend/API_CHANGES_FRONTEND.md
 
 .angular
 dist
+# Local image uploads (development storage provider)
+Backend/API/wwwroot/uploads/

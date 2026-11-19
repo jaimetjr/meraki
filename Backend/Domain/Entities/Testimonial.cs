@@ -11,7 +11,7 @@ namespace Domain.Entities
         public const int ContentMaxLength = 1000;
 
         public string AuthorName { get; private set; }
-        public string AuthorAvatarUrl { get; private set; }
+        public string? AuthorAvatarUrl { get; private set; }
         public string? AuthorBadge { get; private set; }
         public int Rating { get; private set; }
         public string Content { get; private set; }
@@ -20,17 +20,16 @@ namespace Domain.Entities
         // EF Core parameterless constructor
         private Testimonial() { }
 
-        public Testimonial(string authorName, string avatarUrl, int rating, string content, string? badge = null)
+        public Testimonial(string authorName, string? avatarUrl, int rating, string content, string? badge = null)
         {
             if (string.IsNullOrWhiteSpace(authorName)) throw new DomainException("AuthorName is required");
-            if (string.IsNullOrWhiteSpace(avatarUrl)) throw new DomainException("AvatarUrl is required");
             if (string.IsNullOrWhiteSpace(content)) throw new DomainException("Content is required");
             if (rating < 1 || rating > 5) throw new DomainException("Rating must be between 1 and 5");
             if (authorName.Length > AuthorNameMaxLength) throw new DomainException($"AuthorName cannot exceed {AuthorNameMaxLength} characters");
             if (content.Length > ContentMaxLength) throw new DomainException($"Content cannot exceed {ContentMaxLength} characters");
 
             AuthorName = authorName;
-            AuthorAvatarUrl = avatarUrl;
+            AuthorAvatarUrl = string.IsNullOrWhiteSpace(avatarUrl) ? null : avatarUrl;
             Rating = rating;
             Content = content;
             AuthorBadge = badge;
@@ -39,17 +38,16 @@ namespace Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
-        public void Update(string authorName, string avatarUrl, int rating, string content, string? badge = null)
+        public void Update(string authorName, string? avatarUrl, int rating, string content, string? badge = null)
         {
             if (string.IsNullOrWhiteSpace(authorName)) throw new DomainException("AuthorName is required");
-            if (string.IsNullOrWhiteSpace(avatarUrl)) throw new DomainException("AvatarUrl is required");
             if (string.IsNullOrWhiteSpace(content)) throw new DomainException("Content is required");
             if (rating < 1 || rating > 5) throw new DomainException("Rating must be between 1 and 5");
             if (authorName.Length > AuthorNameMaxLength) throw new DomainException($"AuthorName cannot exceed {AuthorNameMaxLength} characters");
             if (content.Length > ContentMaxLength) throw new DomainException($"Content cannot exceed {ContentMaxLength} characters");
 
             AuthorName = authorName;
-            AuthorAvatarUrl = avatarUrl;
+            AuthorAvatarUrl = string.IsNullOrWhiteSpace(avatarUrl) ? null : avatarUrl;
             Rating = rating;
             Content = content;
             AuthorBadge = badge;

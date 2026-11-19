@@ -15,7 +15,7 @@ namespace Infrastructure.Configuration.EntityConfigurations
                 .HasMaxLength(Testimonial.AuthorNameMaxLength);
 
             builder.Property(t => t.AuthorAvatarUrl)
-                .IsRequired();
+                .IsRequired(false);
 
             builder.Property(t => t.AuthorBadge)
                 .HasMaxLength(Testimonial.AuthorBadgeMaxLength);

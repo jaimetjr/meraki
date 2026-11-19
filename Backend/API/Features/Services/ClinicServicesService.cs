@@ -3,13 +3,12 @@ using API.Features.Categories;
 using Domain.Entities;
 using Domain.ValueObjects;
 using Infrastructure.Data;
-using Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Features.Services;
 
 /// <summary>Manages the services the clinic offers (the <see cref="Service"/> entity).</summary>
-public class ClinicServicesService(AppDbContext db, IFileStorageService fileStorage)
+public class ClinicServicesService(AppDbContext db, ImageUploads images)
 {
     private IQueryable<Service> Services => db.Services.Include(s => s.Category).Include(s => s.Benefits);
 
@@ -26,11 +25,9 @@ public class ClinicServicesService(AppDbContext db, IFileStorageService fileStor
 
     public async Task<ServiceDto> CreateAsync(ServiceDto dto, IFormFile? image = null)
     {
-        var imageUrl = dto.Image;
-        if (image is { Length: > 0 })
-            imageUrl = await fileStorage.UploadAsync(image, "services");
+        var picture = await images.ApplyAsync(null, image, removeImage: false, "services");
 
-        var service = new Service(dto.Name, dto.Description, imageUrl, new Money(dto.Price, dto.Currency));
+        var service = new Service(dto.Name, dto.Description, picture.Url, new Money(dto.Price, dto.Currency));
         if (!string.IsNullOrWhiteSpace(dto.LongDescription) || !string.IsNullOrWhiteSpace(dto.Duration))
             service.UpdateDetails(dto.LongDescription, dto.Duration);
         service.UpdateCategory(await LoadCategoryAsync(dto.Category));
@@ -41,16 +38,13 @@ public class ClinicServicesService(AppDbContext db, IFileStorageService fileStor
         return service.ToDto();
     }
 
-    public async Task<bool> UpdateAsync(Guid id, ServiceDto dto, IFormFile? image = null)
+    public async Task<bool> UpdateAsync(Guid id, ServiceDto dto, IFormFile? image = null, bool removeImage = false)
     {
         var service = await Services.FirstOrDefaultAsync(s => s.Id == id);
         if (service == null) return false;
 
-        var imageUrl = dto.Image;
-        if (image is { Length: > 0 })
-            imageUrl = await fileStorage.UploadAsync(image, "services");
-
-        service.Update(dto.Name, dto.Description, imageUrl, new Money(dto.Price, dto.Currency));
+        var picture = await images.ApplyAsync(service.Image, image, removeImage, "services");
+        service.Update(dto.Name, dto.Description, picture.Url, new Money(dto.Price, dto.Currency));
         service.UpdateDetails(dto.LongDescription, dto.Duration);
         if (dto.Category != null)
             service.UpdateCategory(await LoadCategoryAsync(dto.Category));
@@ -58,6 +52,7 @@ public class ClinicServicesService(AppDbContext db, IFileStorageService fileStor
             service.SetBenefits(await db.Benefits.LoadAllByIdAsync(dto.Benefits.Select(b => b.Id), "benefits"));
 
         await db.SaveChangesAsync();
+        await images.CommitAsync(picture);
         return true;
     }
 
