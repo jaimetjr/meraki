@@ -50,10 +50,11 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("SuperAdmin", policy => policy.RequireRole("SuperAdmin"));
 });
 
+var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy => policy
-        .WithOrigins("http://localhost:4200")
+        .WithOrigins(allowedOrigins)
         .AllowAnyHeader()
         .AllowAnyMethod());
 });
@@ -95,8 +96,11 @@ if (app.Environment.IsDevelopment())
 
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DbInitializer.SeedAsync(context);
+    await Seeder.SeedAsync(
+        scope.ServiceProvider.GetRequiredService<AppDbContext>(),
+        configuration.GetSection("Seed:SuperAdmin").Get<SuperAdminSeed>() ?? new SuperAdminSeed(),
+        includeDemoContent: app.Environment.IsDevelopment(),
+        app.Logger);
 }
 
 app.Run();

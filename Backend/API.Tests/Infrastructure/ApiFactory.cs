@@ -29,6 +29,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public string UploadsRoot { get; } = Path.Combine(Path.GetTempPath(), $"meraki-tests-{Guid.NewGuid():N}");
     public const string UploadsBaseUrl = "http://localhost/uploads";
 
+    /// <summary>The SuperAdmin the app creates at startup from Seed:SuperAdmin configuration.</summary>
+    public const string SeedSuperAdminEmail = "owner@test.local";
+    public const string SeedSuperAdminPassword = "Owner-Passw0rd!";
+
+    /// <summary>The frontend origin CORS is configured to allow in tests.</summary>
+    public const string AllowedOrigin = "http://admin.test";
+
     public async ValueTask InitializeAsync()
     {
         await _db.StartAsync();
@@ -43,10 +50,18 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         Environment.SetEnvironmentVariable("Storage__Provider", "Local");
         Environment.SetEnvironmentVariable("Storage__Local__RootPath", UploadsRoot);
         Environment.SetEnvironmentVariable("Storage__PublicBaseUrl", UploadsBaseUrl);
+        Environment.SetEnvironmentVariable("Cors__AllowedOrigins__0", AllowedOrigin);
+        Environment.SetEnvironmentVariable("Seed__SuperAdmin__Email", SeedSuperAdminEmail);
+        Environment.SetEnvironmentVariable("Seed__SuperAdmin__Password", SeedSuperAdminPassword);
 
         var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(_db.GetConnectionString()).Options;
-        await using var context = new AppDbContext(options);
-        await context.Database.MigrateAsync();
+        await using (var context = new AppDbContext(options))
+        {
+            await context.Database.MigrateAsync();
+        }
+
+        // Start the app (and its startup seeding) now, before any test touches the database.
+        CreateClient().Dispose();
     }
 
     public override async ValueTask DisposeAsync()
@@ -59,6 +74,15 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     /// <summary>Maps a URL returned by the API to the file it points at in <see cref="UploadsRoot"/>.</summary>
     public string UploadedFilePath(string url) =>
         Path.Combine(UploadsRoot, url[(UploadsBaseUrl.Length + 1)..].Replace('/', Path.DirectorySeparatorChar));
+
+    /// <summary>A brand-new, migrated database in the same container (for testing the seeder in isolation).</summary>
+    public async Task<AppDbContext> CreateFreshDatabaseAsync()
+    {
+        var connection = new Npgsql.NpgsqlConnectionStringBuilder(_db.GetConnectionString()) { Database = $"fresh_{Guid.NewGuid():N}" };
+        var context = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connection.ConnectionString).Options);
+        await context.Database.MigrateAsync();
+        return context;
+    }
 
     public AppDbContext CreateDbContext()
     {
