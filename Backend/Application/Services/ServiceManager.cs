@@ -1,4 +1,5 @@
-﻿using Application.DTOs;
+using Domain.Exceptions;
+using Application.DTOs;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Entities;
@@ -82,7 +83,7 @@ namespace Application.Services
                     category = await _categoryRepo.GetByIdAsync(dto.Category.Id);
                     if (category == null)
                     {
-                        throw new InvalidOperationException($"Category with ID {dto.Category.Id} does not exist.");
+                        throw new DomainException($"Category with ID {dto.Category.Id} does not exist.");
                     }
                 }
                 
@@ -105,7 +106,7 @@ namespace Application.Services
             }
             else
             {
-                throw new InvalidOperationException("Category is required for Service creation.");
+                throw new DomainException("Category is required for Service creation.");
             }
             
             // Handle Benefits relationship
@@ -161,7 +162,7 @@ namespace Application.Services
                     category = await _categoryRepo.GetByIdAsync(dto.Category.Id);
                     if (category == null)
                     {
-                        throw new InvalidOperationException($"Category with ID {dto.Category.Id} does not exist.");
+                        throw new DomainException($"Category with ID {dto.Category.Id} does not exist.");
                     }
                 }
                 
@@ -170,7 +171,7 @@ namespace Application.Services
                     // Create new category and add to repository for proper tracking
                     if (string.IsNullOrWhiteSpace(dto.Category.Name))
                     {
-                        throw new InvalidOperationException("Category name is required when creating a new category.");
+                        throw new DomainException("Category name is required when creating a new category.");
                     }
                     category = new Category(dto.Category.Name);
                     await _categoryRepo.AddAsync(category);

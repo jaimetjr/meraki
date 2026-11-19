@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 using Domain.Enums;
 using Domain.Interfaces;
 using System;
@@ -7,6 +8,9 @@ namespace Domain.Entities
 {
     public sealed class User : AggregateRoot, ISoftDeletable
     {
+        public const int EmailMaxLength = 255;
+        public const int NameMaxLength = 100;
+
         public string Email { get; private set; }
         public string PasswordHash { get; private set; }
         public UserRole Role { get; private set; }
@@ -19,10 +23,10 @@ namespace Domain.Entities
 
         public User(Guid id, string email, string passwordHash, UserRole role)
         {
-            if (id == Guid.Empty) throw new ArgumentException("Id cannot be empty", nameof(id));
-            if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email is required", nameof(email));
-            if (string.IsNullOrWhiteSpace(passwordHash)) throw new ArgumentException("PasswordHash is required", nameof(passwordHash));
-            if (!IsValidEmail(email)) throw new ArgumentException("Invalid email format", nameof(email));
+            if (id == Guid.Empty) throw new DomainException("Id cannot be empty");
+            if (string.IsNullOrWhiteSpace(email)) throw new DomainException("Email is required");
+            if (string.IsNullOrWhiteSpace(passwordHash)) throw new DomainException("PasswordHash is required");
+            if (!IsValidEmail(email)) throw new DomainException("Invalid email format");
 
             Id = id;
             Email = email.ToLowerInvariant();
@@ -36,9 +40,9 @@ namespace Domain.Entities
         public void UpdateEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException("Email is required", nameof(email));
+                throw new DomainException("Email is required");
             if (!IsValidEmail(email))
-                throw new ArgumentException("Invalid email format", nameof(email));
+                throw new DomainException("Invalid email format");
 
             Email = email.ToLowerInvariant();
             MarkAsModified();
@@ -54,7 +58,7 @@ namespace Domain.Entities
         public void UpdatePassword(string newPasswordHash)
         {
             if (string.IsNullOrWhiteSpace(newPasswordHash))
-                throw new ArgumentException("PasswordHash is required", nameof(newPasswordHash));
+                throw new DomainException("PasswordHash is required");
 
             PasswordHash = newPasswordHash;
             MarkAsModified();

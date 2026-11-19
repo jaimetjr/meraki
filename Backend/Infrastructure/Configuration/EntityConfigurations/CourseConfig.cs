@@ -12,17 +12,17 @@ namespace Infrastructure.Configuration.EntityConfigurations
 
             builder.Property(c => c.Title)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(Course.TitleMaxLength);
 
             builder.Property(c => c.Description)
                 .IsRequired()
-                .HasMaxLength(500);
+                .HasMaxLength(Course.DescriptionMaxLength);
 
             builder.Property(c => c.Image);
 
             builder.Property(c => c.Instructor)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(Course.InstructorMaxLength);
 
             builder.Property(c => c.Type)
                 .HasConversion<string>()
@@ -52,7 +52,7 @@ namespace Infrastructure.Configuration.EntityConfigurations
                     v => v);
 
             builder.Property(c => c.Link)
-                .HasMaxLength(300);
+                .HasMaxLength(Course.LinkMaxLength);
 
             builder.Property(c => c.IsActive)
                 .IsRequired()

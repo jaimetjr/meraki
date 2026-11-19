@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 using Application.DTOs;
 using Application.Interfaces;
 using AutoMapper;
@@ -35,7 +36,7 @@ namespace Application.Services
         public async Task<UserDto> CreateAsync(CreateUserDto dto)
         {
             if (await _userRepository.EmailExistsAsync(dto.Email))
-                throw new InvalidOperationException("Email already exists");
+                throw new ConflictException("Email already exists");
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             var user = new User(
@@ -63,7 +64,7 @@ namespace Application.Services
 
             // Check if email is being changed and if new email already exists
             if (user.Email != dto.Email && await _userRepository.EmailExistsAsync(dto.Email))
-                throw new InvalidOperationException("Email already exists");
+                throw new ConflictException("Email already exists");
 
             // Update email if changed
             if (!string.IsNullOrWhiteSpace(dto.Email) && user.Email != dto.Email)

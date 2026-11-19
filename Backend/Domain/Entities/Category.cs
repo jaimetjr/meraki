@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces;
+using Domain.Exceptions;
+using Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,8 @@ namespace Domain.Entities
 {
     public sealed class Category : AggregateRoot, ISoftDeletable
     {
+        public const int NameMaxLength = 50;
+
         public string Name { get; private set; }
         public bool IsActive { get; private set; }
 
@@ -17,8 +20,8 @@ namespace Domain.Entities
 
         public Category(string name)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required", nameof(name));
-            if (name.Length > 100) throw new ArgumentException("Name cannot exceed 100 characters", nameof(name));
+            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
+            if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
 
             Name = name;
             IsActive = true;
@@ -28,8 +31,8 @@ namespace Domain.Entities
 
         public void Update(string name)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required", nameof(name));
-            if (name.Length > 100) throw new ArgumentException("Name cannot exceed 100 characters", nameof(name));
+            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
+            if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
 
             Name = name;
             MarkAsModified();

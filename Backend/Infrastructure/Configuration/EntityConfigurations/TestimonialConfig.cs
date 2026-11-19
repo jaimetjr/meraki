@@ -12,20 +12,20 @@ namespace Infrastructure.Configuration.EntityConfigurations
 
             builder.Property(t => t.AuthorName)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(Testimonial.AuthorNameMaxLength);
 
             builder.Property(t => t.AuthorAvatarUrl)
                 .IsRequired();
 
             builder.Property(t => t.AuthorBadge)
-                .HasMaxLength(50);
+                .HasMaxLength(Testimonial.AuthorBadgeMaxLength);
 
             builder.Property(t => t.Rating)
                 .IsRequired();
 
             builder.Property(t => t.Content)
                 .IsRequired()
-                .HasMaxLength(1000);
+                .HasMaxLength(Testimonial.ContentMaxLength);
 
             builder.Property(t => t.IsActive)
                 .IsRequired()

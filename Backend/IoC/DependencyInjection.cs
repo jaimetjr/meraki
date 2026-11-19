@@ -1,11 +1,8 @@
-using Application.DTOs;
 using Application.Interfaces;
 using Application.Mapping;
 using Application.Services;
-using Application.Validators;
 using Azure.Storage.Blobs;
 using Domain.Interfaces;
-using FluentValidation;
 using Infrastructure.Data;
 using Infrastructure.HttpClients;
 using Infrastructure.Repositories;
@@ -63,14 +60,6 @@ namespace IoC
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
 
-            // Validators
-            services.AddScoped<IValidator<ServiceDto>, ServiceValidator>();
-            services.AddScoped<IValidator<TherapistDto>, TherapistValidator>();
-            services.AddScoped<IValidator<CourseDto>, CourseValidator>();
-            services.AddScoped<IValidator<CategoryDto>, CategoryValidator>();
-            services.AddScoped<IValidator<BenefitDto>, BenefitValidator>();
-            services.AddScoped<IValidator<SpecialtyDto>, SpecialtyValidator>();
-            services.AddScoped<IValidator<TestimonialDto>, TestimonialValidator>();
 
             // Azure
             services.AddScoped<IFileStorageService, AzureBlobStorageService>();

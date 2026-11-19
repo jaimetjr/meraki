@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces;
+using Domain.Exceptions;
+using Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,9 @@ namespace Domain.Entities
 {
     public sealed class Specialty : AggregateRoot, ISoftDeletable
     {
+        public const int NameMaxLength = 100;
+        public const int DescriptionMaxLength = 300;
+
         public string Name { get; private set; }
         public string? Description { get; private set; }
         public bool IsActive { get; private set; }
@@ -18,9 +22,9 @@ namespace Domain.Entities
 
         public Specialty(string name, string? description = null)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required", nameof(name));
-            if (name.Length > 100) throw new ArgumentException("Name cannot exceed 100 characters", nameof(name));
-            if (description != null && description.Length > 500) throw new ArgumentException("Description cannot exceed 500 characters", nameof(description));
+            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
+            if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
+            if (description != null && description.Length > DescriptionMaxLength) throw new DomainException($"Description cannot exceed {DescriptionMaxLength} characters");
 
             Name = name;
             Description = description;
@@ -31,9 +35,9 @@ namespace Domain.Entities
 
         public void Update(string name, string? description = null)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required", nameof(name));
-            if (name.Length > 100) throw new ArgumentException("Name cannot exceed 100 characters", nameof(name));
-            if (description != null && description.Length > 500) throw new ArgumentException("Description cannot exceed 500 characters", nameof(description));
+            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
+            if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
+            if (description != null && description.Length > DescriptionMaxLength) throw new DomainException($"Description cannot exceed {DescriptionMaxLength} characters");
 
             Name = name;
             Description = description;

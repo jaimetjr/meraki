@@ -1,9 +1,15 @@
-﻿using Domain.Interfaces;
+using Domain.Exceptions;
+using Domain.Interfaces;
 
 namespace Domain.Entities
 {
     public sealed class Testimonial : AggregateRoot, ISoftDeletable
     {
+        public const int AuthorNameMaxLength = 100;
+        public const int AuthorAvatarUrlMaxLength = 300;
+        public const int AuthorBadgeMaxLength = 50;
+        public const int ContentMaxLength = 1000;
+
         public string AuthorName { get; private set; }
         public string AuthorAvatarUrl { get; private set; }
         public string? AuthorBadge { get; private set; }
@@ -16,12 +22,12 @@ namespace Domain.Entities
 
         public Testimonial(string authorName, string avatarUrl, int rating, string content, string? badge = null)
         {
-            if (string.IsNullOrWhiteSpace(authorName)) throw new ArgumentException("AuthorName is required", nameof(authorName));
-            if (string.IsNullOrWhiteSpace(avatarUrl)) throw new ArgumentException("AvatarUrl is required", nameof(avatarUrl));
-            if (string.IsNullOrWhiteSpace(content)) throw new ArgumentException("Content is required", nameof(content));
-            if (rating < 1 || rating > 5) throw new ArgumentException("Rating must be between 1 and 5", nameof(rating));
-            if (authorName.Length > 100) throw new ArgumentException("AuthorName cannot exceed 100 characters", nameof(authorName));
-            if (content.Length > 1000) throw new ArgumentException("Content cannot exceed 1000 characters", nameof(content));
+            if (string.IsNullOrWhiteSpace(authorName)) throw new DomainException("AuthorName is required");
+            if (string.IsNullOrWhiteSpace(avatarUrl)) throw new DomainException("AvatarUrl is required");
+            if (string.IsNullOrWhiteSpace(content)) throw new DomainException("Content is required");
+            if (rating < 1 || rating > 5) throw new DomainException("Rating must be between 1 and 5");
+            if (authorName.Length > AuthorNameMaxLength) throw new DomainException($"AuthorName cannot exceed {AuthorNameMaxLength} characters");
+            if (content.Length > ContentMaxLength) throw new DomainException($"Content cannot exceed {ContentMaxLength} characters");
 
             AuthorName = authorName;
             AuthorAvatarUrl = avatarUrl;
@@ -35,12 +41,12 @@ namespace Domain.Entities
 
         public void Update(string authorName, string avatarUrl, int rating, string content, string? badge = null)
         {
-            if (string.IsNullOrWhiteSpace(authorName)) throw new ArgumentException("AuthorName is required", nameof(authorName));
-            if (string.IsNullOrWhiteSpace(avatarUrl)) throw new ArgumentException("AvatarUrl is required", nameof(avatarUrl));
-            if (string.IsNullOrWhiteSpace(content)) throw new ArgumentException("Content is required", nameof(content));
-            if (rating < 1 || rating > 5) throw new ArgumentException("Rating must be between 1 and 5", nameof(rating));
-            if (authorName.Length > 100) throw new ArgumentException("AuthorName cannot exceed 100 characters", nameof(authorName));
-            if (content.Length > 1000) throw new ArgumentException("Content cannot exceed 1000 characters", nameof(content));
+            if (string.IsNullOrWhiteSpace(authorName)) throw new DomainException("AuthorName is required");
+            if (string.IsNullOrWhiteSpace(avatarUrl)) throw new DomainException("AvatarUrl is required");
+            if (string.IsNullOrWhiteSpace(content)) throw new DomainException("Content is required");
+            if (rating < 1 || rating > 5) throw new DomainException("Rating must be between 1 and 5");
+            if (authorName.Length > AuthorNameMaxLength) throw new DomainException($"AuthorName cannot exceed {AuthorNameMaxLength} characters");
+            if (content.Length > ContentMaxLength) throw new DomainException($"Content cannot exceed {ContentMaxLength} characters");
 
             AuthorName = authorName;
             AuthorAvatarUrl = avatarUrl;

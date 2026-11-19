@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces;
+using Domain.Exceptions;
+using Domain.Interfaces;
 using Domain.ValueObjects;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,11 @@ namespace Domain.Entities;
 
 public sealed class Service : AggregateRoot, ISoftDeletable
 {
+    public const int NameMaxLength = 100;
+    public const int DescriptionMaxLength = 300;
+    public const int LongDescriptionMaxLength = 1000;
+    public const int DurationMaxLength = 50;
+
     public string Name { get; private set; }
     public string Description { get; private set; }
     public string? Image { get; private set; }
@@ -26,10 +32,10 @@ public sealed class Service : AggregateRoot, ISoftDeletable
 
     public Service(string name, string description, string? image, Money money)
     {
-        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required", nameof(name));
-        if (string.IsNullOrWhiteSpace(description)) throw new ArgumentException("Description is required", nameof(description));
-        if (name.Length > 100) throw new ArgumentException("Name cannot exceed 100 characters", nameof(name));
-        if (description.Length > 500) throw new ArgumentException("Description cannot exceed 500 characters", nameof(description));
+        if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
+        if (string.IsNullOrWhiteSpace(description)) throw new DomainException("Description is required");
+        if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
+        if (description.Length > DescriptionMaxLength) throw new DomainException($"Description cannot exceed {DescriptionMaxLength} characters");
 
         Name = name;
         Description = description;
@@ -42,8 +48,8 @@ public sealed class Service : AggregateRoot, ISoftDeletable
 
     public void UpdateDetails(string? longDescription, string? duration)
     {
-        if (longDescription != null && longDescription.Length > 2000) 
-            throw new ArgumentException("LongDescription cannot exceed 2000 characters", nameof(longDescription));
+        if (longDescription != null && longDescription.Length > LongDescriptionMaxLength)
+            throw new DomainException($"LongDescription cannot exceed {LongDescriptionMaxLength} characters");
         
         LongDescription = longDescription;
         Duration = duration;
@@ -81,10 +87,10 @@ public sealed class Service : AggregateRoot, ISoftDeletable
 
     public void Update(string name, string description, string? image, Money price)
     {
-        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required", nameof(name));
-        if (string.IsNullOrWhiteSpace(description)) throw new ArgumentException("Description is required", nameof(description));
-        if (name.Length > 100) throw new ArgumentException("Name cannot exceed 100 characters", nameof(name));
-        if (description.Length > 500) throw new ArgumentException("Description cannot exceed 500 characters", nameof(description));
+        if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
+        if (string.IsNullOrWhiteSpace(description)) throw new DomainException("Description is required");
+        if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
+        if (description.Length > DescriptionMaxLength) throw new DomainException($"Description cannot exceed {DescriptionMaxLength} characters");
 
         Name = name;
         Description = description;

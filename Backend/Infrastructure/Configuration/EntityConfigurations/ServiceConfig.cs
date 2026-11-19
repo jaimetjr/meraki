@@ -17,19 +17,19 @@ namespace Infrastructure.Configuration.EntityConfigurations
 
             builder.Property(s => s.Name)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(Service.NameMaxLength);
 
             builder.Property(s => s.Description)
                 .IsRequired()
-                .HasMaxLength(300);
+                .HasMaxLength(Service.DescriptionMaxLength);
 
             builder.Property(s => s.Image);
 
             builder.Property(s => s.LongDescription)
-                .HasMaxLength(1000);
+                .HasMaxLength(Service.LongDescriptionMaxLength);
 
             builder.Property(s => s.Duration)
-                .HasMaxLength(50);
+                .HasMaxLength(Service.DurationMaxLength);
 
             builder.OwnsOne(s => s.Price, price =>
             {

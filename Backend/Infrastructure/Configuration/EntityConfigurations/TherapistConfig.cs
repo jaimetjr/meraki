@@ -12,11 +12,11 @@ namespace Infrastructure.Configuration.EntityConfigurations
 
             builder.Property(t => t.Name)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(Therapist.NameMaxLength);
 
             builder.Property(t => t.Bio)
                 .IsRequired()
-                .HasMaxLength(500);
+                .HasMaxLength(Therapist.BioMaxLength);
 
             builder.Property(t => t.Image);
 
@@ -27,7 +27,7 @@ namespace Infrastructure.Configuration.EntityConfigurations
                 .IsRequired();
 
             builder.Property(t => t.ProId)
-                .HasMaxLength(200);
+                .HasMaxLength(Therapist.ProIdMaxLength);
 
             builder.HasMany(t => t.Specialties)
                 .WithMany()

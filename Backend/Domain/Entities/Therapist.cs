@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 using Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,10 @@ namespace Domain.Entities
 {
     public sealed class Therapist : AggregateRoot, ISoftDeletable
     {
+        public const int NameMaxLength = 100;
+        public const int BioMaxLength = 500;
+        public const int ProIdMaxLength = 200;
+
         public string Name { get; private set; }
         public string Bio { get; private set; }
         public string? Image { get; private set; }
@@ -23,12 +28,12 @@ namespace Domain.Entities
 
         public Therapist(string name, string bio, string? image, string experience, string education, string? proId = null)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required", nameof(name));
-            if (string.IsNullOrWhiteSpace(bio)) throw new ArgumentException("Bio is required", nameof(bio));
-            if (string.IsNullOrWhiteSpace(experience)) throw new ArgumentException("Experience is required", nameof(experience));
-            if (string.IsNullOrWhiteSpace(education)) throw new ArgumentException("Education is required", nameof(education));
-            if (name.Length > 100) throw new ArgumentException("Name cannot exceed 100 characters", nameof(name));
-            if (bio.Length > 500) throw new ArgumentException("Bio cannot exceed 500 characters", nameof(bio));
+            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
+            if (string.IsNullOrWhiteSpace(bio)) throw new DomainException("Bio is required");
+            if (string.IsNullOrWhiteSpace(experience)) throw new DomainException("Experience is required");
+            if (string.IsNullOrWhiteSpace(education)) throw new DomainException("Education is required");
+            if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
+            if (bio.Length > BioMaxLength) throw new DomainException($"Bio cannot exceed {BioMaxLength} characters");
 
             Name = name;
             Bio = bio;
@@ -53,12 +58,12 @@ namespace Domain.Entities
 
         public void Update(string name, string bio, string? image, string experience, string education, string? proId = null)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required", nameof(name));
-            if (string.IsNullOrWhiteSpace(bio)) throw new ArgumentException("Bio is required", nameof(bio));
-            if (string.IsNullOrWhiteSpace(experience)) throw new ArgumentException("Experience is required", nameof(experience));
-            if (string.IsNullOrWhiteSpace(education)) throw new ArgumentException("Education is required", nameof(education));
-            if (name.Length > 100) throw new ArgumentException("Name cannot exceed 100 characters", nameof(name));
-            if (bio.Length > 500) throw new ArgumentException("Bio cannot exceed 500 characters", nameof(bio));
+            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
+            if (string.IsNullOrWhiteSpace(bio)) throw new DomainException("Bio is required");
+            if (string.IsNullOrWhiteSpace(experience)) throw new DomainException("Experience is required");
+            if (string.IsNullOrWhiteSpace(education)) throw new DomainException("Education is required");
+            if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
+            if (bio.Length > BioMaxLength) throw new DomainException($"Bio cannot exceed {BioMaxLength} characters");
 
             Name = name;
             Bio = bio;

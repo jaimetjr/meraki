@@ -1,3 +1,5 @@
+using Application.Common;
+using Microsoft.AspNetCore.Mvc;
 namespace Application.DTOs
 {
     public class TherapistDto
@@ -9,6 +11,7 @@ namespace Application.DTOs
         public string Experience { get; set; } = default!;
         public string Education { get; set; } = default!;
         public string? ProId { get; set; }
+        [ModelBinder(typeof(FormJsonModelBinder), Name = "specialties")]
         public List<SpecialtyDto> Specialties { get; set; } = new();
 
     }

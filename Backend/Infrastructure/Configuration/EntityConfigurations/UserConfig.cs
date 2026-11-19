@@ -12,7 +12,7 @@ namespace Infrastructure.Configuration.EntityConfigurations
 
             builder.Property(u => u.Email)
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasMaxLength(User.EmailMaxLength);
 
             builder.HasIndex(u => u.Email)
                 .IsUnique();
@@ -27,10 +27,10 @@ namespace Infrastructure.Configuration.EntityConfigurations
                 .HasMaxLength(50);
 
             builder.Property(u => u.FirstName)
-                .HasMaxLength(100);
+                .HasMaxLength(User.NameMaxLength);
 
             builder.Property(u => u.LastName)
-                .HasMaxLength(100);
+                .HasMaxLength(User.NameMaxLength);
 
             builder.Property(u => u.IsActive)
                 .IsRequired()

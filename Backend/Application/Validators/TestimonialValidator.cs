@@ -1,18 +1,17 @@
-﻿using Application.DTOs;
+using Application.DTOs;
+using Domain.Entities;
 using FluentValidation;
 
-namespace Application.Validators
-{
-    public class TestimonialValidator : AbstractValidator<TestimonialDto>
-    {
-        public TestimonialValidator()
-        {
-            RuleFor(x => x.AuthorName).NotEmpty().MaximumLength(100);
-            RuleFor(x => x.AuthorAvatarUrl).MaximumLength(300);
-            RuleFor(x => x.AuthorBadge).MaximumLength(50).When(x => x.AuthorBadge != null);
-            RuleFor(x => x.Rating).InclusiveBetween(1, 5);
-            RuleFor(x => x.Content).NotEmpty().MaximumLength(1000);
-        }
-    }
+namespace Application.Validators;
 
+public class TestimonialValidator : AbstractValidator<TestimonialDto>
+{
+    public TestimonialValidator()
+    {
+        RuleFor(x => x.AuthorName).NotEmpty().MaximumLength(Testimonial.AuthorNameMaxLength);
+        RuleFor(x => x.AuthorAvatarUrl).MaximumLength(Testimonial.AuthorAvatarUrlMaxLength);
+        RuleFor(x => x.AuthorBadge).MaximumLength(Testimonial.AuthorBadgeMaxLength);
+        RuleFor(x => x.Rating).InclusiveBetween(1, 5);
+        RuleFor(x => x.Content).NotEmpty().MaximumLength(Testimonial.ContentMaxLength);
+    }
 }

@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+using Domain.Exceptions;
+using System.Text.RegularExpressions;
 
 namespace Domain.ValueObjects
 {
@@ -9,7 +10,7 @@ namespace Domain.ValueObjects
         public Email(string value)
         {
             if (!Regex.IsMatch(value, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-                throw new ArgumentException("Invalid email format");
+                throw new DomainException("Invalid email format");
 
             Value = value;
         }

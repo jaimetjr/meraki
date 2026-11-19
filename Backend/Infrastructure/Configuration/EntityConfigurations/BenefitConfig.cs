@@ -9,7 +9,7 @@ namespace Infrastructure.Configuration.EntityConfigurations
         public void Configure(EntityTypeBuilder<Benefit> builder)
         {
             builder.HasKey(b => b.Id);
-            builder.Property(b => b.Title).IsRequired().HasMaxLength(100);
+            builder.Property(b => b.Title).IsRequired().HasMaxLength(Benefit.TitleMaxLength);
 
             builder.Property(b => b.IsActive)
                 .IsRequired()

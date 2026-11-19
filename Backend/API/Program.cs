@@ -1,36 +1,33 @@
+using System.Globalization;
+using System.Text;
+using System.Text.Json.Serialization;
+using API.Common;
+using Application.Validators;
+using FluentValidation;
 using Infrastructure.Data;
 using IoC;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
 var configuration = builder.Configuration;
-if (configuration == null)
-    throw new InvalidOperationException("Configuration is not available.");
 
-builder.Services.AddDependencyInjection(configuration.GetConnectionString("DefaultConnection"));
+builder.Services.AddOpenApi();
+builder.Services.AddDependencyInjection(configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured"));
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>())
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.AddValidatorsFromAssemblyContaining<ServiceValidator>();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddSwaggerGen();
-
-// Add HttpContextAccessor for CurrentUserService
 builder.Services.AddHttpContextAccessor();
 
-// Configure JWT Authentication
-var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "MerakiAPI";
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "MerakiAPI";
+var jwtSecretKey = configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
+var jwtIssuer = configuration["Jwt:Issuer"] ?? "MerakiAPI";
+var jwtAudience = configuration["Jwt:Audience"] ?? "MerakiAPI";
 
 builder.Services.AddAuthentication(options =>
 {
@@ -47,7 +44,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
     };
 });
 
@@ -59,23 +56,35 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("FrontendPolicy", builder =>
-    {
-        builder.WithOrigins("http://localhost:4200")
-               .AllowAnyHeader()
-               .AllowAnyMethod();
-    });
+    options.AddPolicy("FrontendPolicy", policy => policy
+        .WithOrigins("http://localhost:4200")
+        .AllowAnyHeader()
+        .AllowAnyMethod());
 });
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+// Parse request values (form numbers, dates) the same way regardless of the server's locale.
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(CultureInfo.InvariantCulture),
+    SupportedCultures = [CultureInfo.InvariantCulture],
+    SupportedUICultures = [CultureInfo.InvariantCulture],
+    RequestCultureProviders = [],
+});
+
 app.UseRouting();
+app.UseCors("FrontendPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.UseCors("FrontendPolicy");
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -87,14 +96,12 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
-
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await DbInitializer.SeedAsync(context);
 }
+
 app.Run();
 
 public partial class Program;
-

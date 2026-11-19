@@ -12,10 +12,10 @@ namespace Infrastructure.Configuration.EntityConfigurations
 
             builder.Property(s => s.Name)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(Specialty.NameMaxLength);
 
             builder.Property(s => s.Description)
-                .HasMaxLength(300);
+                .HasMaxLength(Specialty.DescriptionMaxLength);
 
             builder.Property(s => s.IsActive)
                 .IsRequired()

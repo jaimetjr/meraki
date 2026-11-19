@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+using Domain.Exceptions;
+using Domain.Enums;
 using Domain.Interfaces;
 using Domain.ValueObjects;
 using System;
@@ -11,6 +12,11 @@ namespace Domain.Entities
 {
     public sealed class Course : AggregateRoot, ISoftDeletable
     {
+        public const int TitleMaxLength = 100;
+        public const int DescriptionMaxLength = 500;
+        public const int InstructorMaxLength = 100;
+        public const int LinkMaxLength = 300;
+
         public string Title { get; private set; }
         public string Description { get; private set; }
         public string? Image { get; private set; }
@@ -29,11 +35,11 @@ namespace Domain.Entities
 
         public Course(string title, string description, string? image, string instructor, CourseType type, CourseStatus status)
         {
-            if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("Title is required", nameof(title));
-            if (string.IsNullOrWhiteSpace(description)) throw new ArgumentException("Description is required", nameof(description));
-            if (string.IsNullOrWhiteSpace(instructor)) throw new ArgumentException("Instructor is required", nameof(instructor));
-            if (title.Length > 200) throw new ArgumentException("Title cannot exceed 200 characters", nameof(title));
-            if (description.Length > 1000) throw new ArgumentException("Description cannot exceed 1000 characters", nameof(description));
+            if (string.IsNullOrWhiteSpace(title)) throw new DomainException("Title is required");
+            if (string.IsNullOrWhiteSpace(description)) throw new DomainException("Description is required");
+            if (string.IsNullOrWhiteSpace(instructor)) throw new DomainException("Instructor is required");
+            if (title.Length > TitleMaxLength) throw new DomainException($"Title cannot exceed {TitleMaxLength} characters");
+            if (description.Length > DescriptionMaxLength) throw new DomainException($"Description cannot exceed {DescriptionMaxLength} characters");
 
             Title = title;
             Description = description;
@@ -82,10 +88,10 @@ namespace Domain.Entities
                 }
 
                 if (utcEndDate < utcStartDate)
-                    throw new ArgumentException("EndDate cannot be before StartDate", nameof(endDate));
+                    throw new DomainException("EndDate cannot be before StartDate");
             }
             
-            if (utcStartDate < DateTime.UtcNow) throw new ArgumentException("StartDate cannot be in the past", nameof(startDate));
+            if (utcStartDate < DateTime.UtcNow) throw new DomainException("StartDate cannot be in the past");
             if (price == null) throw new ArgumentNullException(nameof(price));
 
             StartDate = utcStartDate;
@@ -98,11 +104,11 @@ namespace Domain.Entities
 
         public void Update(string title, string description, string? image, string instructor, CourseType type, CourseStatus status)
         {
-            if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("Title is required", nameof(title));
-            if (string.IsNullOrWhiteSpace(description)) throw new ArgumentException("Description is required", nameof(description));
-            if (string.IsNullOrWhiteSpace(instructor)) throw new ArgumentException("Instructor is required", nameof(instructor));
-            if (title.Length > 200) throw new ArgumentException("Title cannot exceed 200 characters", nameof(title));
-            if (description.Length > 1000) throw new ArgumentException("Description cannot exceed 1000 characters", nameof(description));
+            if (string.IsNullOrWhiteSpace(title)) throw new DomainException("Title is required");
+            if (string.IsNullOrWhiteSpace(description)) throw new DomainException("Description is required");
+            if (string.IsNullOrWhiteSpace(instructor)) throw new DomainException("Instructor is required");
+            if (title.Length > TitleMaxLength) throw new DomainException($"Title cannot exceed {TitleMaxLength} characters");
+            if (description.Length > DescriptionMaxLength) throw new DomainException($"Description cannot exceed {DescriptionMaxLength} characters");
 
             Title = title;
             Description = description;

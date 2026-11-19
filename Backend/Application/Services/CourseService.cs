@@ -1,4 +1,5 @@
-﻿using Application.DTOs;
+using Domain.Exceptions;
+using Application.DTOs;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Entities;
@@ -38,8 +39,8 @@ namespace Application.Services
 
         public async Task<List<CourseDto>> GetByStatusAsync(string status)
         {
-            if (!Enum.TryParse<CourseStatus>(status, out var parsedStatus))
-                throw new ArgumentException($"Invalid course status: {status}");
+            if (!Enum.TryParse<CourseStatus>(status, ignoreCase: true, out var parsedStatus))
+                throw new DomainException($"Invalid course status: {status}");
 
             var courses = await _courseRepo.GetByStatusAsync(parsedStatus);
             return _mapper.Map<List<CourseDto>>(courses);
@@ -60,13 +61,13 @@ namespace Application.Services
                 dto.Description,
                 imageUrl,
                 dto.Instructor,
-                Enum.Parse<CourseType>(dto.Type),
-                Enum.Parse<CourseStatus>(dto.Status)
+                Enum.Parse<CourseType>(dto.Type, ignoreCase: true),
+                Enum.Parse<CourseStatus>(dto.Status, ignoreCase: true)
             );
 
             if (dto.StartDate.HasValue && !string.IsNullOrEmpty(dto.Modality))
             {
-                var modality = Enum.Parse<Modality>(dto.Modality);
+                var modality = Enum.Parse<Modality>(dto.Modality, ignoreCase: true);
                 var price = new Money(dto.Price ?? 0, dto.Currency);
                 // Schedule method will handle UTC conversion
                 course.Schedule(dto.StartDate.Value, dto.EndDate, modality, price, dto.Link);
@@ -95,13 +96,13 @@ namespace Application.Services
                 dto.Description,
                 imageUrl,
                 dto.Instructor,
-                Enum.Parse<CourseType>(dto.Type),
-                Enum.Parse<CourseStatus>(dto.Status)
+                Enum.Parse<CourseType>(dto.Type, ignoreCase: true),
+                Enum.Parse<CourseStatus>(dto.Status, ignoreCase: true)
             );
 
             if (dto.StartDate.HasValue && !string.IsNullOrEmpty(dto.Modality))
             {
-                var modality = Enum.Parse<Modality>(dto.Modality);
+                var modality = Enum.Parse<Modality>(dto.Modality, ignoreCase: true);
                 var price = new Money(dto.Price ?? 0, dto.Currency);
                 // Schedule method will handle UTC conversion
                 existing.Schedule(dto.StartDate.Value, dto.EndDate, modality, price, dto.Link);
