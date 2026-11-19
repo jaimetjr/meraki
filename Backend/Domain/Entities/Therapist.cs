@@ -46,14 +46,13 @@ namespace Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
-        public void AddSpecialty(Specialty specialty)
+        /// <summary>Replaces the therapist's specialties with exactly the given set.</summary>
+        public void SetSpecialties(IEnumerable<Specialty> specialties)
         {
-            if (specialty == null) throw new ArgumentNullException(nameof(specialty));
-            if (!Specialties.Any(x => x.Id == specialty.Id))
-            {
-                Specialties.Add(specialty);
-                MarkAsModified();
-            }
+            ArgumentNullException.ThrowIfNull(specialties);
+            Specialties.Clear();
+            Specialties.AddRange(specialties.DistinctBy(s => s.Id));
+            MarkAsModified();
         }
 
         public void Update(string name, string bio, string? image, string experience, string education, string? proId = null)

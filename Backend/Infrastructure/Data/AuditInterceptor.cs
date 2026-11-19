@@ -1,108 +1,70 @@
-using Application.Interfaces;
+using System.Text.Json;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using System.Text.Json;
 
-namespace Infrastructure.Data
+namespace Infrastructure.Data;
+
+/// <summary>
+/// Stamps CreatedBy/UpdatedBy with the current user and writes one AuditLog row (old/new values
+/// as JSON) for every added, modified or deleted <see cref="Entity"/>.
+/// </summary>
+public class AuditInterceptor(ICurrentUser currentUser) : SaveChangesInterceptor
 {
-    public class AuditInterceptor : Microsoft.EntityFrameworkCore.Diagnostics.SaveChangesInterceptor
+    public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
-        private readonly ICurrentUserService _currentUserService;
+        if (eventData.Context != null) AddAuditEntries(eventData.Context);
+        return base.SavingChanges(eventData, result);
+    }
 
-        public AuditInterceptor(ICurrentUserService currentUserService)
-        {
-            _currentUserService = currentUserService;
-        }
+    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+        DbContextEventData eventData,
+        InterceptionResult<int> result,
+        CancellationToken cancellationToken = default)
+    {
+        if (eventData.Context != null) AddAuditEntries(eventData.Context);
+        return base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
 
-        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
-            DbContextEventData eventData,
-            InterceptionResult<int> result,
-            CancellationToken cancellationToken = default)
+    private void AddAuditEntries(DbContext context)
+    {
+        var userId = currentUser.UserId;
+        var entries = context.ChangeTracker.Entries()
+            .Where(e => e.Entity is Entity and not AuditLog
+                        && e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .ToList();
+
+        var auditLogs = new List<AuditLog>();
+        foreach (var entry in entries)
         {
-            if (eventData.Context != null)
+            var entity = (Entity)entry.Entity;
+
+            if (entry.State == EntityState.Added) entity.SetCreatedBy(userId);
+            else if (entry.State == EntityState.Modified) entity.SetUpdatedBy(userId);
+
+            var action = entry.State switch
             {
-                await ProcessAuditEntriesAsync(eventData.Context, cancellationToken);
+                EntityState.Added => "Create",
+                EntityState.Modified => "Update",
+                _ => "Delete",
+            };
+
+            string? oldValues = null;
+            string? newValues = null;
+            if (entry.State is EntityState.Modified or EntityState.Deleted)
+            {
+                oldValues = JsonSerializer.Serialize(entry.OriginalValues.Properties
+                    .ToDictionary(p => p.Name, p => entry.OriginalValues[p]?.ToString() ?? "null"));
+            }
+            if (entry.State is EntityState.Added or EntityState.Modified)
+            {
+                newValues = JsonSerializer.Serialize(entry.CurrentValues.Properties
+                    .ToDictionary(p => p.Name, p => entry.CurrentValues[p]?.ToString() ?? "null"));
             }
 
-            return await base.SavingChangesAsync(eventData, result, cancellationToken);
+            auditLogs.Add(new AuditLog(Guid.NewGuid(), entry.Entity.GetType().Name, entity.Id, action, userId, oldValues, newValues));
         }
 
-        private async Task ProcessAuditEntriesAsync(DbContext context, CancellationToken cancellationToken)
-        {
-            var userId = _currentUserService.UserId;
-            var entries = context.ChangeTracker.Entries()
-                .Where(e => e.Entity is Entity && (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted))
-                .ToList();
-
-            var auditLogs = new List<AuditLog>();
-
-            foreach (var entry in entries)
-            {
-                var entity = entry.Entity as Entity;
-                if (entity == null) continue;
-
-                // Skip AuditLog entities to avoid infinite recursion
-                if (entity is AuditLog) continue;
-
-                var entityType = entry.Entity.GetType().Name;
-                var entityId = entity.Id;
-
-                // Set CreatedBy/UpdatedBy on the entity
-                if (entry.State == EntityState.Added)
-                {
-                    entity.SetCreatedBy(userId);
-                }
-                else if (entry.State == EntityState.Modified)
-                {
-                    entity.SetUpdatedBy(userId);
-                }
-
-                // Create audit log entry
-                string? oldValues = null;
-                string? newValues = null;
-                string action = entry.State switch
-                {
-                    EntityState.Added => "Create",
-                    EntityState.Modified => "Update",
-                    EntityState.Deleted => "Delete",
-                    _ => "Unknown"
-                };
-
-                if (entry.State == EntityState.Modified || entry.State == EntityState.Deleted)
-                {
-                    var originalValues = entry.OriginalValues.Properties
-                        .ToDictionary(p => p.Name, p => entry.OriginalValues[p]?.ToString() ?? "null");
-                    oldValues = JsonSerializer.Serialize(originalValues);
-                }
-
-                if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
-                {
-                    var currentValues = entry.CurrentValues.Properties
-                        .ToDictionary(p => p.Name, p => entry.CurrentValues[p]?.ToString() ?? "null");
-                    newValues = JsonSerializer.Serialize(currentValues);
-                }
-
-                var auditLog = new AuditLog(
-                    Guid.NewGuid(),
-                    entityType,
-                    entityId,
-                    action,
-                    userId,
-                    oldValues,
-                    newValues
-                );
-
-                auditLogs.Add(auditLog);
-            }
-
-            // Add all audit logs to the context
-            if (auditLogs.Any())
-            {
-                context.Set<AuditLog>().AddRange(auditLogs);
-            }
-        }
+        if (auditLogs.Count > 0) context.Set<AuditLog>().AddRange(auditLogs);
     }
 }
-

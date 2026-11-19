@@ -1,48 +1,55 @@
 ﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Data
+namespace Infrastructure.Data;
+
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public class AppDbContext :DbContext
+    public DbSet<Service> Services => Set<Service>();
+    public DbSet<Therapist> Therapists => Set<Therapist>();
+    public DbSet<Course> Courses => Set<Course>();
+    public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Benefit> Benefits => Set<Benefit>();
+    public DbSet<Specialty> Specialties => Set<Specialty>();
+    public DbSet<Testimonial> Testimonials => Set<Testimonial>();
+    public DbSet<User> Users => Set<User>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        public DbSet<Service> Services => Set<Service>();
-        public DbSet<Therapist> Therapists => Set<Therapist>();
-        public DbSet<Course> Courses => Set<Course>();
-        public DbSet<Category> Categories => Set<Category>();
-        public DbSet<Benefit> Benefits => Set<Benefit>();
-        public DbSet<Specialty> Specialties => Set<Specialty>();
-        public DbSet<Testimonial> Testimonials => Set<Testimonial>();
-        public DbSet<User> Users => Set<User>();
-        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+        // Soft-deleted content is invisible to every query (including Include and Find-by-id).
+        // Users are deliberately not filtered: inactive users stay listed so they can be reactivated.
+        modelBuilder.Entity<Service>().HasQueryFilter(e => e.IsActive);
+        modelBuilder.Entity<Therapist>().HasQueryFilter(e => e.IsActive);
+        modelBuilder.Entity<Course>().HasQueryFilter(e => e.IsActive);
+        modelBuilder.Entity<Category>().HasQueryFilter(e => e.IsActive);
+        modelBuilder.Entity<Benefit>().HasQueryFilter(e => e.IsActive);
+        modelBuilder.Entity<Specialty>().HasQueryFilter(e => e.IsActive);
+        modelBuilder.Entity<Testimonial>().HasQueryFilter(e => e.IsActive);
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        ConfigureAuditFor<Service>(modelBuilder);
+        ConfigureAuditFor<Therapist>(modelBuilder);
+        ConfigureAuditFor<Course>(modelBuilder);
+        ConfigureAuditFor<Category>(modelBuilder);
+        ConfigureAuditFor<Benefit>(modelBuilder);
+        ConfigureAuditFor<Specialty>(modelBuilder);
+        ConfigureAuditFor<Testimonial>(modelBuilder);
+    }
 
-            ConfigureAuditFor<Service>(modelBuilder);
-            ConfigureAuditFor<Therapist>(modelBuilder);
-            ConfigureAuditFor<Course>(modelBuilder);
-            ConfigureAuditFor<Category>(modelBuilder);
-            ConfigureAuditFor<Benefit>(modelBuilder);
-            ConfigureAuditFor<Specialty>(modelBuilder);
-            ConfigureAuditFor<Testimonial>(modelBuilder);
-        }
+    private static void ConfigureAuditFor<TEntity>(ModelBuilder modelBuilder) where TEntity : Entity
+    {
+        var entity = modelBuilder.Entity<TEntity>();
 
-        private static void ConfigureAuditFor<TEntity>(ModelBuilder modelBuilder) where TEntity : Entity
-        {
-            var entity = modelBuilder.Entity<TEntity>();
+        entity.HasOne<User>()
+              .WithMany()
+              .HasForeignKey(e => e.CreatedBy)
+              .OnDelete(DeleteBehavior.SetNull);
 
-            entity.HasOne<User>()
-                  .WithMany()
-                  .HasForeignKey(e => e.CreatedBy)
-                  .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne<User>()
-                  .WithMany()
-                  .HasForeignKey(e => e.UpdatedBy)
-                  .OnDelete(DeleteBehavior.SetNull);
-        }
+        entity.HasOne<User>()
+              .WithMany()
+              .HasForeignKey(e => e.UpdatedBy)
+              .OnDelete(DeleteBehavior.SetNull);
     }
 }

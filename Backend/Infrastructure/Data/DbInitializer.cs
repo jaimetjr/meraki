@@ -73,11 +73,10 @@ namespace Infrastructure.Data
                 var specialties = context.Specialties.ToList();
 
                 var terapeuta1 = new Therapist("Dra. Ana Souza", "Psicóloga clínica com mais de 10 anos de experiência", "/images/ana.jpg", "10 anos atuando com TCC e trauma", "Doutorado em Psicologia");
-                terapeuta1.AddSpecialty(specialties[0]);
-                terapeuta1.AddSpecialty(specialties[3]);
+                terapeuta1.SetSpecialties([specialties[0], specialties[3]]);
 
                 var terapeuta2 = new Therapist("Carlos Lima", "Instrutor de mindfulness e meditação", "/images/carlos.jpg", "8 anos ensinando práticas de atenção plena", "Certificação Internacional em Mindfulness");
-                terapeuta2.AddSpecialty(specialties[2]);
+                terapeuta2.SetSpecialties([specialties[2]]);
 
                 context.Therapists.AddRange(terapeuta1, terapeuta2);
                 await context.SaveChangesAsync();

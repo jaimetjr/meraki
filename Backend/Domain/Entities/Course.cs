@@ -91,7 +91,10 @@ namespace Domain.Entities
                     throw new DomainException("EndDate cannot be before StartDate");
             }
             
-            if (utcStartDate < DateTime.UtcNow) throw new DomainException("StartDate cannot be in the past");
+            // A past start date is only rejected when it is being set or changed, so courses that
+            // already started remain editable.
+            if (utcStartDate != StartDate && utcStartDate < DateTime.UtcNow)
+                throw new DomainException("StartDate cannot be in the past");
             if (price == null) throw new ArgumentNullException(nameof(price));
 
             StartDate = utcStartDate;

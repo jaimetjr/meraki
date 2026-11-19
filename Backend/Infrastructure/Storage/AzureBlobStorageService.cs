@@ -1,4 +1,3 @@
-﻿using Application.Interfaces;
 using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;

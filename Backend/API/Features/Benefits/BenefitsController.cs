@@ -1,0 +1,40 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace API.Features.Benefits;
+
+[Route("api/benefits")]
+[ApiController]
+public class BenefitsController(BenefitService service) : ControllerBase
+{
+    [HttpGet]
+    public async Task<IActionResult> GetAll() => Ok(await service.GetAllAsync());
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var result = await service.GetByIdAsync(id);
+        return result == null ? NotFound() : Ok(result);
+    }
+
+    [HttpGet("search/{keyword}")]
+    public async Task<IActionResult> Search(string keyword) => Ok(await service.SearchAsync(keyword));
+
+    [HttpPost]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    public async Task<IActionResult> Create(BenefitDto dto)
+    {
+        var created = await service.CreateAsync(dto);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    public async Task<IActionResult> Update(Guid id, BenefitDto dto) =>
+        await service.UpdateAsync(id, dto) ? NoContent() : NotFound();
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    public async Task<IActionResult> Delete(Guid id) =>
+        await service.DeleteAsync(id) ? NoContent() : NotFound();
+}

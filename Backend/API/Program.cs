@@ -2,10 +2,8 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json.Serialization;
 using API.Common;
-using Application.Validators;
 using FluentValidation;
 using Infrastructure.Data;
-using IoC;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.IdentityModel.Tokens;
@@ -14,16 +12,14 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
 builder.Services.AddOpenApi();
-builder.Services.AddDependencyInjection(configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured"));
+builder.Services.AddMerakiServices(configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>())
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-builder.Services.AddValidatorsFromAssemblyContaining<ServiceValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddSwaggerGen();
-builder.Services.AddHttpContextAccessor();
 
 var jwtSecretKey = configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
 var jwtIssuer = configuration["Jwt:Issuer"] ?? "MerakiAPI";

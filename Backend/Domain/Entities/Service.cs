@@ -58,31 +58,19 @@ public sealed class Service : AggregateRoot, ISoftDeletable
 
     public void UpdateCategory(Category category)
     {
-        if (category == null) throw new ArgumentNullException(nameof(category));
+        ArgumentNullException.ThrowIfNull(category);
         Category = category;
-        // Only set CategoryId if the category already has an ID (existing entity)
-        // For new categories, EF Core will set CategoryId automatically when SaveChanges is called
-        if (category.Id != Guid.Empty)
-        {
-            CategoryId = category.Id;
-        }
+        CategoryId = category.Id;
         MarkAsModified();
     }
 
-    public void AddBenefit(Benefit benefit)
+    /// <summary>Replaces the service's benefits with exactly the given set.</summary>
+    public void SetBenefits(IEnumerable<Benefit> benefits)
     {
-        if (benefit == null) throw new ArgumentNullException(nameof(benefit));
-        
-        // Check for duplicates: by reference equality (works for both new and existing)
-        // or by ID if the benefit already has an ID (existing entity)
-        bool alreadyExists = Benefits.Contains(benefit) || 
-                            (benefit.Id != Guid.Empty && Benefits.Any(b => b.Id == benefit.Id));
-        
-        if (!alreadyExists)
-        {
-            Benefits.Add(benefit);
-            MarkAsModified();
-        }
+        ArgumentNullException.ThrowIfNull(benefits);
+        Benefits.Clear();
+        Benefits.AddRange(benefits.DistinctBy(b => b.Id));
+        MarkAsModified();
     }
 
     public void Update(string name, string description, string? image, Money price)
