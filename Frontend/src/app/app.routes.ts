@@ -35,6 +35,7 @@ export const routes: Routes = [
       { path: 'benefits', loadComponent: () => import("./pages/admin/benefits/benefits.component").then(m => m.BenefitsComponent) },
       { path: 'specialties', loadComponent: () => import("./pages/admin/specialties/specialties.component").then(m => m.SpecialtiesComponent) },
       { path: 'testimonials', loadComponent: () => import("./pages/admin/testimonials/testimonials.component").then(m => m.TestimonialsComponent) },
+      { path: 'messages', loadComponent: () => import("./pages/admin/messages/messages.component").then(m => m.MessagesComponent) },
       { path: 'users', loadComponent: () => import("./pages/admin/users/users.component").then(m => m.UsersComponent), canActivate: [SuperAdminGuard] },
     ]
   },

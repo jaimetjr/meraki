@@ -42,6 +42,7 @@ public static class ServiceRegistration
         services.AddScoped<TestimonialService>();
 
         services.AddFileStorage(configuration, environment);
+        services.AddContactForm(configuration);
 
         // ConsultorioME (external scheduling platform)
         services.AddHttpClient("ConsultorioME", (provider, client) =>

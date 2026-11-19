@@ -1,71 +1,76 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ContactService } from './contact.service';
 import { environment } from '../../environments/environment';
-import type { ContactRequest, ContactResponse } from '../models/contact.model';
+import type { ContactMessage, ContactRequest, ContactResponse } from '../models/contact.model';
 
 describe('ContactService', () => {
   let service: ContactService;
   let httpMock: HttpTestingController;
+  const baseUrl = `${environment.apiBaseUrl}/contact`;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [ContactService],
+      providers: [ContactService, provideHttpClient(), provideHttpClientTesting()],
     });
     service = TestBed.inject(ContactService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => {
-    httpMock.verify();
-  });
+  afterEach(() => httpMock.verify());
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
-  it('should send contact request', () => {
-    const mockRequest: ContactRequest = {
+  it('posts the message with consent and captcha token', () => {
+    const request: ContactRequest = {
       name: 'Test User',
       email: 'test@example.com',
       phone: '1234567890',
-      service: 'acupuntura',
+      service: 'Terapia',
       message: 'Test message',
+      consent: true,
+      captchaToken: 'token-1',
     };
+    const response: ContactResponse = { success: true, message: 'ok' };
+    let received: ContactResponse | undefined;
 
-    const mockResponse: ContactResponse = {
-      success: true,
-      message: 'Message sent successfully',
-    };
+    service.send(request).subscribe((r) => (received = r));
 
-    service.send(mockRequest).subscribe((response) => {
-      expect(response).toEqual(mockResponse);
-    });
-
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/contact`);
+    const req = httpMock.expectOne(baseUrl);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual(mockRequest);
-    req.flush(mockResponse);
+    expect(req.request.body).toEqual(request);
+    req.flush(response);
+    expect(received).toEqual(response);
   });
 
-  it('should handle error response', () => {
-    const mockRequest: ContactRequest = {
-      name: 'Test User',
-      email: 'test@example.com',
-      phone: '1234567890',
-      service: 'acupuntura',
-    };
+  it('lists the inbox', () => {
+    const messages: ContactMessage[] = [{
+      id: '1', name: 'Ana', email: 'ana@example.com', phone: '1', service: 'Terapia',
+      message: 'Oi', isRead: false, createdAt: '2026-11-20T10:00:00Z',
+    }];
+    let received: ContactMessage[] | undefined;
 
-    service.send(mockRequest).subscribe({
-      next: () => fail('should have failed'),
-      error: (error) => {
-        expect(error.status).toBe(500);
-      },
-    });
+    service.list().subscribe((m) => (received = m));
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/contact`);
-    req.flush('Server Error', { status: 500, statusText: 'Internal Server Error' });
+    const req = httpMock.expectOne(baseUrl);
+    expect(req.request.method).toBe('GET');
+    req.flush(messages);
+    expect(received).toEqual(messages);
+  });
+
+  it('marks a message read or unread', () => {
+    service.markRead('42', true).subscribe();
+
+    const req = httpMock.expectOne(`${baseUrl}/42/read`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ isRead: true });
+    req.flush(null, { status: 204, statusText: 'No Content' });
+  });
+
+  it('deletes a message', () => {
+    service.delete('42').subscribe();
+
+    const req = httpMock.expectOne(`${baseUrl}/42`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null, { status: 204, statusText: 'No Content' });
   });
 });
-

@@ -84,10 +84,13 @@
             class="form-input"
           >
             <option value="" disabled>Selecione um serviço</option>
-            @for (service of services; track service.value) {
-              <option [value]="service.value">{{service.label}}</option>
+            @for (service of serviceOptions(); track service) {
+              <option [value]="service">{{ service }}</option>
             }
           </select>
+          @if (contactForm.get('service')?.invalid && contactForm.get('service')?.touched) {
+            <p class="text-sm text-red-600">Selecione um serviço</p>
+          }
         </div>
         
         <div class="space-y-2">
@@ -98,9 +101,27 @@
             id="message" 
             formControlName="message" 
             placeholder="Como podemos ajudar?" 
-            rows="4" 
+            rows="4"
             class="form-input"
           ></textarea>
+        </div>
+        <div class="space-y-2">
+          <label class="flex items-start gap-2 text-sm text-gray-700">
+            <input type="checkbox" formControlName="consent" class="mt-1">
+            <span>
+              Concordo que a Meraki Saúde Integrativa armazene meus dados (nome, e-mail, telefone e mensagem)
+              para responder ao meu contato. *
+            </span>
+          </label>
+          @if (contactForm.get('consent')?.invalid && contactForm.get('consent')?.touched) {
+            <p class="text-sm text-red-600">É necessário concordar para enviarmos sua mensagem.</p>
+          }
+        </div>
+        <div class="space-y-2">
+          <app-turnstile-widget #captcha [siteKey]="siteKey" (token)="onCaptchaToken($event)"></app-turnstile-widget>
+          @if (captchaMissing()) {
+            <p class="text-sm text-red-600">Confirme que você não é um robô.</p>
+          }
         </div>
         
         <button 

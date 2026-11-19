@@ -79,6 +79,7 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 app.UseLocalUploads();
 app.UseRouting();
 app.UseCors("FrontendPolicy");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

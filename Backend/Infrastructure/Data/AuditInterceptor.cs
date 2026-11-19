@@ -51,12 +51,13 @@ public class AuditInterceptor(ICurrentUser currentUser) : SaveChangesInterceptor
 
             string? oldValues = null;
             string? newValues = null;
-            if (entry.State is EntityState.Modified or EntityState.Deleted)
+            var recordValues = entry.Entity is not IHoldsPersonalData;
+            if (recordValues && entry.State is EntityState.Modified or EntityState.Deleted)
             {
                 oldValues = JsonSerializer.Serialize(entry.OriginalValues.Properties
                     .ToDictionary(p => p.Name, p => entry.OriginalValues[p]?.ToString() ?? "null"));
             }
-            if (entry.State is EntityState.Added or EntityState.Modified)
+            if (recordValues && entry.State is EntityState.Added or EntityState.Modified)
             {
                 newValues = JsonSerializer.Serialize(entry.CurrentValues.Properties
                     .ToDictionary(p => p.Name, p => entry.CurrentValues[p]?.ToString() ?? "null"));

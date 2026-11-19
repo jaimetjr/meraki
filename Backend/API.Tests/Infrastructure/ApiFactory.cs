@@ -4,8 +4,13 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Domain.Entities;
 using Domain.Enums;
+using Infrastructure.Captcha;
 using Infrastructure.Data;
+using Infrastructure.Email;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
@@ -36,6 +41,25 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     /// <summary>The frontend origin CORS is configured to allow in tests.</summary>
     public const string AllowedOrigin = "http://admin.test";
 
+    public const string ClinicEmail = "clinic@test.local";
+    public const int ContactRateLimitPerHour = 3;
+
+    /// <summary>E-mails the app "sent" during the test run.</summary>
+    public RecordingEmailSender Emails { get; } = new();
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.ConfigureTestServices(services =>
+        {
+            // External services (Cloudflare, SMTP) are replaced at their boundary.
+            services.RemoveAll<ICaptchaVerifier>();
+            services.AddSingleton<ICaptchaVerifier, FakeCaptchaVerifier>();
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(Emails);
+            services.AddSingleton<IStartupFilter, TestClientIpStartupFilter>();
+        });
+    }
+
     public async ValueTask InitializeAsync()
     {
         await _db.StartAsync();
@@ -51,6 +75,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         Environment.SetEnvironmentVariable("Storage__Local__RootPath", UploadsRoot);
         Environment.SetEnvironmentVariable("Storage__PublicBaseUrl", UploadsBaseUrl);
         Environment.SetEnvironmentVariable("Cors__AllowedOrigins__0", AllowedOrigin);
+        Environment.SetEnvironmentVariable("Contact__NotifyEmail", ClinicEmail);
+        Environment.SetEnvironmentVariable("Contact__RateLimitPerHour", ContactRateLimitPerHour.ToString());
         Environment.SetEnvironmentVariable("Seed__SuperAdmin__Email", SeedSuperAdminEmail);
         Environment.SetEnvironmentVariable("Seed__SuperAdmin__Password", SeedSuperAdminPassword);
 

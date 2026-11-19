@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { path: "/admin/benefits", label: "Benefícios" },
   { path: "/admin/specialties", label: "Especialidades" },
   { path: "/admin/testimonials", label: "Depoimentos" },
+  { path: "/admin/messages", label: "Mensagens" },
 ];
 
 const SUPER_ADMIN_NAV_ITEMS = [
