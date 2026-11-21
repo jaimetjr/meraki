@@ -166,21 +166,11 @@ export class ServicesComponent implements OnInit {
       Name: selectedCategory.name 
     }));
     
-    // Add benefits - send as lowercase 'benefits' parameter (matching backend)
-    const selectedBenefits = (value.benefitIds || []).filter(Boolean);
-    const benefitsArray = selectedBenefits.map(id => {
-      const benefit = this.benefits().find(b => b.id === id);
-      if (benefit) {
-        return { 
-          Id: id, 
-          Title: benefit.title || "", 
-          Description: benefit.description || "" 
-        };
-      }
-      return null;
-    }).filter((b): b is { Id: string; Title: string; Description: string } => b !== null);
-    
-    formData.append('benefits', JSON.stringify(benefitsArray));
+    // The API replaces the service's benefits with exactly these ids and reads nothing else,
+    // so send the selected ids as they are: never look them up in the dropdown's list, which may
+    // not have loaded (an empty list here would delete every benefit).
+    const benefitIds = (value.benefitIds || []).filter(Boolean);
+    formData.append('benefits', JSON.stringify(benefitIds.map((id) => ({ id }))));
     
     // Add image file (required)
     if (value.imageFile) {

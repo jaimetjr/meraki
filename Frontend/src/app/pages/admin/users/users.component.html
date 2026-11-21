@@ -84,14 +84,14 @@
             type="password"
             formControlName="password" 
             [class.border-red-500]="form.get('password')?.invalid && form.get('password')?.touched"
-            [placeholder]="isCreating() ? 'Mínimo 6 caracteres' : 'Deixe em branco para manter a senha atual'"
+            [placeholder]="isCreating() ? 'Mínimo 8 caracteres' : 'Deixe em branco para manter a senha atual'"
           />
           @if (form.get('password')?.invalid && form.get('password')?.touched) {
             <p class="text-sm text-red-600">
               @if (form.get('password')?.errors?.['required']) {
                 Senha é obrigatória.
               } @else if (form.get('password')?.errors?.['minlength']) {
-                Senha deve ter no mínimo 6 caracteres.
+                Senha deve ter no mínimo 8 caracteres.
               }
             </p>
           }
@@ -132,8 +132,8 @@
             formControlName="isActive"
             [class.border-red-500]="form.get('isActive')?.invalid && form.get('isActive')?.touched"
           >
-            <option [value]="true">Ativo</option>
-            <option [value]="false">Inativo</option>
+            <option [ngValue]="true">Ativo</option>
+            <option [ngValue]="false">Inativo</option>
           </select>
         </label>
 

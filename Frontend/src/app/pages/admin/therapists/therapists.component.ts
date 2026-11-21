@@ -145,21 +145,11 @@ export class TherapistsComponent implements OnInit {
       formData.append('proId', value.proId);
     }
     
-    // Add specialties - send as specialtiesJson with JSON string
-    const selectedSpecialties = (value.specialtyIds || []).filter(Boolean);
-    const specialtiesArray = selectedSpecialties.map(id => {
-      const specialty = this.specialties().find(s => s.id === id);
-      if (specialty) {
-        return {
-          id: specialty.id,
-          name: specialty.name,
-          description: specialty.description
-        };
-      }
-      return null;
-    }).filter((s): s is { id: string; name: string; description: string } => s !== null);
-    
-    formData.append('specialties', JSON.stringify(specialtiesArray));
+    // The API replaces the therapist's specialties with exactly these ids and reads nothing else,
+    // so send the selected ids as they are: never look them up in the dropdown's list, which may
+    // not have loaded (an empty list here would delete every specialty).
+    const specialtyIds = (value.specialtyIds || []).filter(Boolean);
+    formData.append('specialties', JSON.stringify(specialtyIds.map((id) => ({ id }))));
     
     // Add image file if provided
     if (value.imageFile) {

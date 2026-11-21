@@ -13,6 +13,9 @@ import { ToastService } from "../../../services/toast.service";
 import type { User, CreateUserDto, UpdateUserDto } from "../../../models/user.model";
 import { UserRole } from "../../../models/user.model";
 
+/** Must match the API (CreateUserValidator.PasswordMinLength). */
+const PASSWORD_MIN_LENGTH = 8;
+
 @Component({
   selector: "app-admin-users",
   standalone: true,
@@ -48,7 +51,7 @@ export class UsersComponent implements OnInit {
 
   form = this.fb.group({
     email: ["", [Validators.required, Validators.email]],
-    password: ["", [Validators.minLength(6)]],
+    password: ["", [Validators.minLength(PASSWORD_MIN_LENGTH)]],
     firstName: [""],
     lastName: [""],
     role: [UserRole.Admin as UserRole, Validators.required],
@@ -77,7 +80,7 @@ export class UsersComponent implements OnInit {
       isActive: true,
     });
     // Require password for new users
-    this.form.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
+    this.form.get('password')?.setValidators([Validators.required, Validators.minLength(PASSWORD_MIN_LENGTH)]);
     this.form.get('password')?.updateValueAndValidity();
   }
 
@@ -94,7 +97,7 @@ export class UsersComponent implements OnInit {
     });
     // Password is optional when editing
     this.form.get('password')?.clearValidators();
-    this.form.get('password')?.setValidators([Validators.minLength(6)]);
+    this.form.get('password')?.setValidators([Validators.minLength(PASSWORD_MIN_LENGTH)]);
     this.form.get('password')?.updateValueAndValidity();
   }
 
@@ -106,7 +109,7 @@ export class UsersComponent implements OnInit {
       isActive: true,
     });
     // Reset password validation
-    this.form.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
+    this.form.get('password')?.setValidators([Validators.required, Validators.minLength(PASSWORD_MIN_LENGTH)]);
     this.form.get('password')?.updateValueAndValidity();
   }
 
@@ -178,7 +181,7 @@ export class UsersComponent implements OnInit {
         next: () => {
           this.saving.set(false);
           // If password was provided, update it separately
-          if (value.password && value.password.length >= 6) {
+          if (value.password && value.password.length >= PASSWORD_MIN_LENGTH) {
             this.usersService.updatePassword(this.editingId()!, value.password).subscribe({
               next: () => {
                 this.cancelEdit();
