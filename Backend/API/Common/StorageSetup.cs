@@ -6,12 +6,12 @@ namespace API.Common;
 /// <summary>
 /// Chooses where uploaded images live from configuration:
 /// <c>Storage:Provider</c> = <c>Local</c> (default; files on disk, served by this API) or <c>R2</c> (Cloudflare R2).
-/// <c>Storage:PublicBaseUrl</c> is the URL prefix browsers use to load the files.
+/// <c>Storage:PublicBaseUrl</c> is the URL prefix browsers use to load the files. It is required for both
+/// providers and has no default (Development sets it in appsettings.Development.json), so a deploy that
+/// forgets it fails at startup instead of storing image URLs that point at localhost.
 /// </summary>
 public static class StorageSetup
 {
-    private const string DefaultLocalBaseUrl = "http://localhost:5063/uploads";
-
     public static IServiceCollection AddFileStorage(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         services.AddScoped<ImageUploads>();
@@ -19,16 +19,12 @@ public static class StorageSetup
         switch (Provider(configuration))
         {
             case "local":
-                var root = LocalRoot(configuration, environment);
-                var localBaseUrl = configuration["Storage:PublicBaseUrl"] ?? DefaultLocalBaseUrl;
-                services.AddSingleton<IFileStorage>(new LocalDiskFileStorage(root, localBaseUrl));
+                services.AddSingleton<IFileStorage>(new LocalDiskFileStorage(LocalRoot(configuration, environment), PublicBaseUrl(configuration)));
                 break;
             case "r2":
                 var options = configuration.GetSection("Storage:R2").Get<R2Options>()
                     ?? throw new InvalidOperationException("Storage:R2 settings are missing.");
-                var publicBaseUrl = configuration["Storage:PublicBaseUrl"]
-                    ?? throw new InvalidOperationException("Storage:PublicBaseUrl is required for R2 (the bucket's public URL).");
-                services.AddSingleton<IFileStorage>(new R2FileStorage(options, publicBaseUrl));
+                services.AddSingleton<IFileStorage>(new R2FileStorage(options, PublicBaseUrl(configuration)));
                 break;
             default:
                 throw new InvalidOperationException($"Unknown Storage:Provider '{configuration["Storage:Provider"]}' (use Local or R2).");
@@ -44,13 +40,21 @@ public static class StorageSetup
 
         var root = LocalRoot(app.Configuration, app.Environment);
         Directory.CreateDirectory(root);
-        var baseUrl = app.Configuration["Storage:PublicBaseUrl"] ?? DefaultLocalBaseUrl;
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(root),
-            RequestPath = new Uri(baseUrl).AbsolutePath.TrimEnd('/'),
+            RequestPath = new Uri(PublicBaseUrl(app.Configuration)).AbsolutePath.TrimEnd('/'),
         });
         return app;
+    }
+
+    private static string PublicBaseUrl(IConfiguration configuration)
+    {
+        var url = configuration["Storage:PublicBaseUrl"];
+        return string.IsNullOrWhiteSpace(url)
+            ? throw new InvalidOperationException(
+                "Storage:PublicBaseUrl is required: the URL prefix browsers load images from (the R2 bucket's public URL, or this API's /uploads URL for local storage).")
+            : url;
     }
 
     private static string Provider(IConfiguration configuration) =>

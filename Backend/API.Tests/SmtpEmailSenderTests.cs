@@ -28,6 +28,26 @@ public sealed class MailpitFixture : IAsyncLifetime
 public class SmtpEmailSenderTests(MailpitFixture mailpit) : IClassFixture<MailpitFixture>
 {
     [Fact]
+    public async Task Gives_up_within_its_timeout_when_the_server_accepts_but_never_answers()
+    {
+        // A server that accepts the TCP connection and then says nothing (not even the SMTP greeting).
+        using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+        var accepted = listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
+        var sender = new SmtpEmailSender(
+            new SmtpOptions { Host = "127.0.0.1", Port = port, From = "site@meraki.test", TimeoutSeconds = 1 },
+            NullLogger<SmtpEmailSender>.Instance);
+
+        var send = sender.SendAsync(new EmailMessage("clinic@meraki.test", "Assunto", "Corpo"), TestContext.Current.CancellationToken);
+        var finished = await Task.WhenAny(send, Task.Delay(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+
+        (await accepted).Dispose(); // lets a still-hanging send fail fast after the assertion
+        Assert.Same(send, finished);
+        await Assert.ThrowsAnyAsync<Exception>(() => send);
+    }
+
+    [Fact]
     public async Task Delivers_the_message_with_reply_to_over_smtp()
     {
         var sender = new SmtpEmailSender(

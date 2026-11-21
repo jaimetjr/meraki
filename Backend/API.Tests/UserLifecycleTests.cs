@@ -56,6 +56,30 @@ public class UserLifecycleTests(ApiFactory api)
     }
 
     [Fact]
+    public async Task A_superadmin_cannot_change_their_own_role()
+    {
+        var (id, email) = await api.CreateUserAsync(UserRole.SuperAdmin);
+        var self = api.ClientWithToken(await api.LoginAsync(email, ApiFactory.Password));
+
+        var response = await self.PutAsJsonAsync($"/api/users/{id}", new { email, role = "Admin" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var stored = await self.GetJson($"/api/users/{id}");
+        Assert.Equal("SuperAdmin", stored.GetProperty("role").GetString());
+    }
+
+    [Fact]
+    public async Task A_superadmin_can_edit_their_own_profile_when_the_role_is_unchanged()
+    {
+        var (id, email) = await api.CreateUserAsync(UserRole.SuperAdmin);
+        var self = api.ClientWithToken(await api.LoginAsync(email, ApiFactory.Password));
+
+        var response = await self.PutAsJsonAsync($"/api/users/{id}", new { email, firstName = "Novo", role = "SuperAdmin", isActive = true });
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Email_of_an_inactive_user_cannot_be_reused()
     {
         var client = await api.ClientAsAsync(UserRole.SuperAdmin);

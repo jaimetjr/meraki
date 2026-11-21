@@ -19,6 +19,12 @@ public sealed class SmtpOptions
 
     /// <summary>The sender address, e.g. "site@clinic.com.br" (must be allowed by the SMTP provider).</summary>
     public string From { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Upper bound for one whole send (connect, log in, send). The contact form waits for it, so a slow or
+    /// unreachable server must not hold the visitor's request for MailKit's default of minutes per step.
+    /// </summary>
+    public int TimeoutSeconds { get; set; } = 10;
 }
 
 /// <summary>Sends e-mail through any SMTP server (clinic mailbox, Resend, SendGrid, Brevo…).</summary>
@@ -33,13 +39,16 @@ public sealed class SmtpEmailSender(SmtpOptions options, ILogger<SmtpEmailSender
         mime.Subject = message.Subject;
         mime.Body = new TextPart("plain") { Text = message.Body };
 
-        using var client = new SmtpClient();
+        var limit = TimeSpan.FromSeconds(options.TimeoutSeconds);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(limit);
+        using var client = new SmtpClient { Timeout = (int)limit.TotalMilliseconds };
         // Auto: implicit TLS on 465, STARTTLS when the server offers it otherwise.
-        await client.ConnectAsync(options.Host, options.Port, SecureSocketOptions.Auto, cancellationToken);
+        await client.ConnectAsync(options.Host, options.Port, SecureSocketOptions.Auto, timeout.Token);
         if (!string.IsNullOrWhiteSpace(options.User))
-            await client.AuthenticateAsync(options.User, options.Password ?? string.Empty, cancellationToken);
-        await client.SendAsync(FormatOptions.Default, new SendRequest(mime), cancellationToken);
-        await client.DisconnectAsync(quit: true, cancellationToken);
+            await client.AuthenticateAsync(options.User, options.Password ?? string.Empty, timeout.Token);
+        await client.SendAsync(FormatOptions.Default, new SendRequest(mime), timeout.Token);
+        await client.DisconnectAsync(quit: true, timeout.Token);
 
         logger.LogInformation("Sent e-mail \"{Subject}\" to {To}", message.Subject, message.To);
     }

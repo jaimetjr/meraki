@@ -24,32 +24,32 @@ public class CourseService(AppDbContext db, ImageUploads images)
         return (await db.Courses.AsNoTracking().Where(c => c.Status == parsed).ToListAsync()).ConvertAll(c => c.ToDto());
     }
 
-    public async Task<CourseDto> CreateAsync(CourseDto dto, IFormFile? image = null)
-    {
-        var picture = await images.ApplyAsync(null, image, removeImage: false, "courses");
+    public Task<CourseDto> CreateAsync(CourseDto dto, IFormFile? image = null) =>
+        images.SaveWithAsync(null, image, removeImage: false, "courses", async imageUrl =>
+        {
+            var course = new Course(dto.Title, dto.Description, imageUrl, dto.Instructor,
+                Enum.Parse<CourseType>(dto.Type, ignoreCase: true), Enum.Parse<CourseStatus>(dto.Status, ignoreCase: true));
+            Schedule(course, dto);
 
-        var course = new Course(dto.Title, dto.Description, picture.Url, dto.Instructor,
-            Enum.Parse<CourseType>(dto.Type, ignoreCase: true), Enum.Parse<CourseStatus>(dto.Status, ignoreCase: true));
-        Schedule(course, dto);
-
-        db.Courses.Add(course);
-        await db.SaveChangesAsync();
-        return course.ToDto();
-    }
+            db.Courses.Add(course);
+            await db.SaveChangesAsync();
+            return course.ToDto();
+        });
 
     public async Task<bool> UpdateAsync(Guid id, CourseDto dto, IFormFile? image = null, bool removeImage = false)
     {
         var course = await db.Courses.FirstOrDefaultAsync(c => c.Id == id);
         if (course == null) return false;
 
-        var picture = await images.ApplyAsync(course.Image, image, removeImage, "courses");
-        course.Update(dto.Title, dto.Description, picture.Url, dto.Instructor,
-            Enum.Parse<CourseType>(dto.Type, ignoreCase: true), Enum.Parse<CourseStatus>(dto.Status, ignoreCase: true));
-        Schedule(course, dto);
+        return await images.SaveWithAsync(course.Image, image, removeImage, "courses", async imageUrl =>
+        {
+            course.Update(dto.Title, dto.Description, imageUrl, dto.Instructor,
+                Enum.Parse<CourseType>(dto.Type, ignoreCase: true), Enum.Parse<CourseStatus>(dto.Status, ignoreCase: true));
+            Schedule(course, dto);
 
-        await db.SaveChangesAsync();
-        await images.CommitAsync(picture);
-        return true;
+            await db.SaveChangesAsync();
+            return true;
+        });
     }
 
     public async Task<bool> DeleteAsync(Guid id)

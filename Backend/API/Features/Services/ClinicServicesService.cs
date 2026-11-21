@@ -23,37 +23,37 @@ public class ClinicServicesService(AppDbContext db, ImageUploads images)
             .Where(s => s.Category != null && s.Category.Name == categoryName)
             .ToListAsync()).ConvertAll(s => s.ToDto());
 
-    public async Task<ServiceDto> CreateAsync(ServiceDto dto, IFormFile? image = null)
-    {
-        var picture = await images.ApplyAsync(null, image, removeImage: false, "services");
+    public Task<ServiceDto> CreateAsync(ServiceDto dto, IFormFile? image = null) =>
+        images.SaveWithAsync(null, image, removeImage: false, "services", async imageUrl =>
+        {
+            var service = new Service(dto.Name, dto.Description, imageUrl, new Money(dto.Price, dto.Currency));
+            if (!string.IsNullOrWhiteSpace(dto.LongDescription) || !string.IsNullOrWhiteSpace(dto.Duration))
+                service.UpdateDetails(dto.LongDescription, dto.Duration);
+            service.UpdateCategory(await LoadCategoryAsync(dto.Category));
+            service.SetBenefits(await db.Benefits.LoadAllByIdAsync(dto.Benefits?.Select(b => b.Id), "benefits"));
 
-        var service = new Service(dto.Name, dto.Description, picture.Url, new Money(dto.Price, dto.Currency));
-        if (!string.IsNullOrWhiteSpace(dto.LongDescription) || !string.IsNullOrWhiteSpace(dto.Duration))
-            service.UpdateDetails(dto.LongDescription, dto.Duration);
-        service.UpdateCategory(await LoadCategoryAsync(dto.Category));
-        service.SetBenefits(await db.Benefits.LoadAllByIdAsync(dto.Benefits?.Select(b => b.Id), "benefits"));
-
-        db.Services.Add(service);
-        await db.SaveChangesAsync();
-        return service.ToDto();
-    }
+            db.Services.Add(service);
+            await db.SaveChangesAsync();
+            return service.ToDto();
+        });
 
     public async Task<bool> UpdateAsync(Guid id, ServiceDto dto, IFormFile? image = null, bool removeImage = false)
     {
         var service = await Services.FirstOrDefaultAsync(s => s.Id == id);
         if (service == null) return false;
 
-        var picture = await images.ApplyAsync(service.Image, image, removeImage, "services");
-        service.Update(dto.Name, dto.Description, picture.Url, new Money(dto.Price, dto.Currency));
-        service.UpdateDetails(dto.LongDescription, dto.Duration);
-        if (dto.Category != null)
-            service.UpdateCategory(await LoadCategoryAsync(dto.Category));
-        if (dto.Benefits != null)
-            service.SetBenefits(await db.Benefits.LoadAllByIdAsync(dto.Benefits.Select(b => b.Id), "benefits"));
+        return await images.SaveWithAsync(service.Image, image, removeImage, "services", async imageUrl =>
+        {
+            service.Update(dto.Name, dto.Description, imageUrl, new Money(dto.Price, dto.Currency));
+            service.UpdateDetails(dto.LongDescription, dto.Duration);
+            if (dto.Category != null)
+                service.UpdateCategory(await LoadCategoryAsync(dto.Category));
+            if (dto.Benefits != null)
+                service.SetBenefits(await db.Benefits.LoadAllByIdAsync(dto.Benefits.Select(b => b.Id), "benefits"));
 
-        await db.SaveChangesAsync();
-        await images.CommitAsync(picture);
-        return true;
+            await db.SaveChangesAsync();
+            return true;
+        });
     }
 
     public async Task<bool> DeleteAsync(Guid id)

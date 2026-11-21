@@ -43,10 +43,10 @@ Committed `Backend/API/appsettings.json` holds only non-secret defaults. `appset
 | `Jwt:SecretKey` (secret), `Jwt:Issuer`, `Jwt:Audience`, `Jwt:ExpirationMinutes` | Auth tokens; the secret is required at startup |
 | `Seed:SuperAdmin:Email` / `Password` (secret) | Startup creates this SuperAdmin if no active SuperAdmin exists, or promotes/reactivates it if the e-mail exists (lockout recovery) |
 | `Cors:AllowedOrigins` | Frontend origins (array) |
-| `Storage:Provider` (`Local` \| `R2`), `Storage:PublicBaseUrl` | Where images go and the URL prefix browsers load them from |
+| `Storage:Provider` (`Local` \| `R2`), `Storage:PublicBaseUrl` | Where images go and the URL prefix browsers load them from. `PublicBaseUrl` has no default outside `appsettings.Development.json`; startup fails without it |
 | `Storage:Local:RootPath` | Local uploads folder (default `API/wwwroot/uploads`, gitignored, served at the path of `PublicBaseUrl`) |
 | `Storage:R2:AccountId/AccessKeyId/SecretAccessKey/Bucket` (secret) | Cloudflare R2 |
-| `Email:Mode` (`Smtp` \| `Log`), `Email:Smtp:Host/Port/User/Password/From` | Contact notifications |
+| `Email:Mode` (`Smtp` \| `Log`), `Email:Smtp:Host/Port/User/Password/From`, `Email:Smtp:TimeoutSeconds` (default 10) | Contact notifications. In `Smtp` mode startup fails without `Host` and `From`; one send is capped at `TimeoutSeconds` |
 | `Contact:NotifyEmail`, `Contact:RateLimitPerHour` (default 10) | Contact form |
 | `Turnstile:SecretKey` (secret in prod) | CAPTCHA verification; the site key lives in `Frontend/src/environments/environment*.ts` |
 | `ConsultorioME:ClientId/Secret/BaseUrl` | External scheduling platform, only needed by `/api/consultoriome` |
@@ -85,10 +85,10 @@ Cross-cutting rules:
 - **Validation:** `ValidationFilter` runs the `IValidator<T>` for every action argument automatically. Validators are discovered from the API assembly.
 - **Multipart + JSON fields:** content endpoints take `[FromForm]` DTOs. Nested lists arrive as JSON strings in a form field (`category`, `benefits`, `specialties`) and are bound by `[ModelBinder(typeof(FormJsonModelBinder), Name = "...")]` plus `[ValidateNever]`. Only their ids are used, loaded with `QueryableExtensions.LoadAllByIdAsync`, which rejects unknown or soft-deleted ids with a 400.
 - **Relations are replaced, not merged:** `Therapist.SetSpecialties` and `Service.SetBenefits`. A null list on update keeps the current set; `[]` clears it.
-- **Soft delete:** EF global query filters (`IsActive`) on all content entities in `AppDbContext`. **Users are not filtered**: inactive users stay listed, DELETE deactivates, nobody can deactivate themselves, and inactive users can't log in. Deleting a category still used by a service → 409.
+- **Soft delete:** EF global query filters (`IsActive`) on all content entities in `AppDbContext`. **Users are not filtered**: inactive users stay listed, DELETE deactivates, nobody can deactivate themselves or change their own role, and inactive users can't log in. Deleting a category still used by a service → 409.
 - **Audit:** `AuditInterceptor` stamps `CreatedBy`/`UpdatedBy` and writes an `AuditLog` row with old/new JSON values for every `Entity` change. Entities marked `IHoldsPersonalData` (`ContactMessage`) get the action logged but never their values.
 - **Images:** `ImageUploads` is the single rule for every resource:
-  - a new file replaces the image, and the old file is deleted after the DB save;
+  - a new file replaces the image, and the old file is deleted after the DB save; if the save fails, the new upload is deleted instead (`ImageUploads.SaveWithAsync` wraps the entity build + save);
   - `removeImage=true` clears it;
   - otherwise the image is kept;
   - only JPG/PNG/WEBP up to 5 MB are accepted, checked by extension and signature bytes;

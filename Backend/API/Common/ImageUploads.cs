@@ -3,8 +3,11 @@ using Infrastructure.Storage;
 
 namespace API.Common;
 
-/// <summary>The image a resource should have after a request, and the file it replaced (if any).</summary>
-public sealed record ImageChange(string? Url, string? Replaced);
+/// <summary>
+/// The image a resource should have after a request, the file it replaced (if any), and the file this
+/// request uploaded (if any).
+/// </summary>
+internal sealed record ImageChange(string? Url, string? Replaced, string? Uploaded);
 
 /// <summary>
 /// The single image rule for every resource: a new file replaces the current image, <c>removeImage</c>
@@ -23,28 +26,54 @@ public sealed class ImageUploads(IFileStorage storage, ILogger<ImageUploads> log
         [".webp"] = "image/webp",
     };
 
-    public async Task<ImageChange> ApplyAsync(string? currentUrl, IFormFile? file, bool removeImage, string folder)
-    {
-        if (file is { Length: > 0 }) return new ImageChange(await SaveAsync(file, folder), currentUrl);
-        if (removeImage) return new ImageChange(null, currentUrl);
-        return new ImageChange(currentUrl, null);
-    }
-
     /// <summary>
-    /// Deletes the replaced file. Call only after the new state has been saved; a failure here only
-    /// leaves an unused file behind, so it is logged instead of failing the request.
+    /// Applies the image rule, then runs <paramref name="save"/> with the image URL the resource should have
+    /// (build or update the entity and save it there).
+    /// <list type="bullet">
+    /// <item>If <paramref name="save"/> throws, the file this request uploaded is deleted, so a rejected
+    /// request leaves nothing behind. The current image is never touched.</item>
+    /// <item>If it succeeds, the replaced file is deleted.</item>
+    /// </list>
     /// </summary>
-    public async Task CommitAsync(ImageChange change)
+    public async Task<T> SaveWithAsync<T>(string? currentUrl, IFormFile? file, bool removeImage, string folder, Func<string?, Task<T>> save)
     {
-        if (change.Replaced is not { } replaced || replaced == change.Url) return;
-
+        var change = await ApplyAsync(currentUrl, file, removeImage, folder);
+        T result;
         try
         {
-            await storage.DeleteAsync(replaced);
+            result = await save(change.Url);
+        }
+        catch
+        {
+            if (change.Uploaded is { } uploaded) await DeleteQuietlyAsync(uploaded, "upload of a rejected request");
+            throw;
+        }
+
+        if (change.Replaced is { } replaced && replaced != change.Url) await DeleteQuietlyAsync(replaced, "replaced image");
+        return result;
+    }
+
+    private async Task<ImageChange> ApplyAsync(string? currentUrl, IFormFile? file, bool removeImage, string folder)
+    {
+        if (file is { Length: > 0 })
+        {
+            var uploaded = await SaveAsync(file, folder);
+            return new ImageChange(uploaded, currentUrl, uploaded);
+        }
+        if (removeImage) return new ImageChange(null, currentUrl, null);
+        return new ImageChange(currentUrl, null, null);
+    }
+
+    /// <summary>A failed delete only leaves an unused file behind, so it is logged instead of failing the request.</summary>
+    private async Task DeleteQuietlyAsync(string url, string what)
+    {
+        try
+        {
+            await storage.DeleteAsync(url);
         }
         catch (Exception exception)
         {
-            logger.LogWarning(exception, "Could not delete replaced image {Url}; it is now unused.", replaced);
+            logger.LogWarning(exception, "Could not delete {What} {Url}; it is now unused.", what, url);
         }
     }
 

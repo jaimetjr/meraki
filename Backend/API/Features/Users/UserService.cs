@@ -7,7 +7,8 @@ namespace API.Features.Users;
 
 /// <summary>
 /// User management. Users are never removed: deactivation is reversible, inactive users stay
-/// listed (and cannot log in), and nobody can deactivate their own account.
+/// listed (and cannot log in), and nobody can deactivate their own account or change their own role,
+/// so the last SuperAdmin can't lock everyone out of user management.
 /// </summary>
 public class UserService(AppDbContext db, ICurrentUser currentUser)
 {
@@ -41,7 +42,12 @@ public class UserService(AppDbContext db, ICurrentUser currentUser)
             user.UpdateEmail(dto.Email);
         }
         user.UpdateProfile(dto.FirstName, dto.LastName);
-        if (dto.Role.HasValue) user.UpdateRole(dto.Role.Value);
+        if (dto.Role.HasValue && dto.Role.Value != user.Role)
+        {
+            if (user.Id == currentUser.UserId)
+                throw new DomainException("You cannot change your own role.");
+            user.UpdateRole(dto.Role.Value);
+        }
 
         if (dto.IsActive == true) user.Activate();
         else if (dto.IsActive == false) Deactivate(user);

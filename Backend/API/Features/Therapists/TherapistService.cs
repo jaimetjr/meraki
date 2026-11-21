@@ -20,31 +20,31 @@ public class TherapistService(AppDbContext db, ImageUploads images)
             .Where(t => t.Specialties.Any(s => s.Name == specialtyName))
             .ToListAsync()).ConvertAll(t => t.ToDto());
 
-    public async Task<TherapistDto> CreateAsync(TherapistDto dto, IFormFile? image = null)
-    {
-        var picture = await images.ApplyAsync(null, image, removeImage: false, "therapists");
+    public Task<TherapistDto> CreateAsync(TherapistDto dto, IFormFile? image = null) =>
+        images.SaveWithAsync(null, image, removeImage: false, "therapists", async imageUrl =>
+        {
+            var therapist = new Therapist(dto.Name, dto.Bio, imageUrl, dto.Experience, dto.Education, dto.ProId);
+            therapist.SetSpecialties(await db.Specialties.LoadAllByIdAsync(dto.Specialties?.Select(s => s.Id), "specialties"));
 
-        var therapist = new Therapist(dto.Name, dto.Bio, picture.Url, dto.Experience, dto.Education, dto.ProId);
-        therapist.SetSpecialties(await db.Specialties.LoadAllByIdAsync(dto.Specialties?.Select(s => s.Id), "specialties"));
-
-        db.Therapists.Add(therapist);
-        await db.SaveChangesAsync();
-        return therapist.ToDto();
-    }
+            db.Therapists.Add(therapist);
+            await db.SaveChangesAsync();
+            return therapist.ToDto();
+        });
 
     public async Task<bool> UpdateAsync(Guid id, TherapistDto dto, IFormFile? image = null, bool removeImage = false)
     {
         var therapist = await Therapists.FirstOrDefaultAsync(t => t.Id == id);
         if (therapist == null) return false;
 
-        var picture = await images.ApplyAsync(therapist.Image, image, removeImage, "therapists");
-        therapist.Update(dto.Name, dto.Bio, picture.Url, dto.Experience, dto.Education, dto.ProId);
-        if (dto.Specialties != null)
-            therapist.SetSpecialties(await db.Specialties.LoadAllByIdAsync(dto.Specialties.Select(s => s.Id), "specialties"));
+        return await images.SaveWithAsync(therapist.Image, image, removeImage, "therapists", async imageUrl =>
+        {
+            therapist.Update(dto.Name, dto.Bio, imageUrl, dto.Experience, dto.Education, dto.ProId);
+            if (dto.Specialties != null)
+                therapist.SetSpecialties(await db.Specialties.LoadAllByIdAsync(dto.Specialties.Select(s => s.Id), "specialties"));
 
-        await db.SaveChangesAsync();
-        await images.CommitAsync(picture);
-        return true;
+            await db.SaveChangesAsync();
+            return true;
+        });
     }
 
     public async Task<bool> DeleteAsync(Guid id)

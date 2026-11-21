@@ -22,8 +22,12 @@ public static class ContactSetup
         switch ((configuration["Email:Mode"] ?? "Log").ToLowerInvariant())
         {
             case "smtp":
-                services.AddSingleton(configuration.GetSection("Email:Smtp").Get<SmtpOptions>()
-                    ?? throw new InvalidOperationException("Email:Smtp settings are missing."));
+                var smtp = configuration.GetSection("Email:Smtp").Get<SmtpOptions>() ?? new SmtpOptions();
+                if (string.IsNullOrWhiteSpace(smtp.Host))
+                    throw new InvalidOperationException("Email:Smtp:Host is required when Email:Mode is Smtp (or set Email:Mode to Log).");
+                if (string.IsNullOrWhiteSpace(smtp.From))
+                    throw new InvalidOperationException("Email:Smtp:From is required when Email:Mode is Smtp (the sender address).");
+                services.AddSingleton(smtp);
                 services.AddSingleton<IEmailSender, SmtpEmailSender>();
                 break;
             case "log":
