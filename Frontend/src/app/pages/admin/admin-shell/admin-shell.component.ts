@@ -1,5 +1,4 @@
 import { Component, OnDestroy, inject, signal, computed, effect } from "@angular/core";
-import { CommonModule } from "@angular/common";
 import { Router, RouterLink, RouterOutlet, NavigationEnd } from "@angular/router";
 import { Subscription, filter } from "rxjs";
 import { AuthService } from "../../../services/auth.service";
@@ -25,7 +24,7 @@ const SUPER_ADMIN_NAV_ITEMS = [
 @Component({
   selector: "app-admin-shell",
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink],
   templateUrl: "./admin-shell.component.html",
   styleUrl: "./admin-shell.component.css",
 })

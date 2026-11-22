@@ -1,4 +1,4 @@
-import { type ApplicationConfig, LOCALE_ID, ErrorHandler, isDevMode } from "@angular/core"
+import { type ApplicationConfig, LOCALE_ID, ErrorHandler, isDevMode, provideZoneChangeDetection } from "@angular/core"
 import { registerLocaleData } from "@angular/common"
 import localePt from "@angular/common/locales/pt"
 import { provideRouter, withViewTransitions, withComponentInputBinding, withInMemoryScrolling } from "@angular/router"
@@ -15,6 +15,8 @@ registerLocaleData(localePt)
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Angular 21+ defaults to zoneless change detection; this app still relies on zone.js.
+    provideZoneChangeDetection(),
     provideRouter(
       routes,
       withViewTransitions(),

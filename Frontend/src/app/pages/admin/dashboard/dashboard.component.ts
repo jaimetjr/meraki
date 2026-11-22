@@ -1,5 +1,4 @@
 import { Component, OnDestroy, inject, signal, computed } from "@angular/core";
-import { CommonModule } from "@angular/common";
 import { Subscription } from "rxjs";
 import { AuthService } from "../../../services/auth.service";
 import { AdminPanelComponent } from "../../../components/admin/admin-panel/admin-panel.component";
@@ -9,7 +8,7 @@ import type { AnalyticsData, TimeRange } from "../../../models/analytics.model";
 @Component({
   selector: "app-admin-dashboard",
   standalone: true,
-  imports: [CommonModule, AdminPanelComponent],
+  imports: [AdminPanelComponent],
   templateUrl: "./dashboard.component.html",
   styleUrl: "./dashboard.component.css",
 })

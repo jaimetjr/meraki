@@ -1,5 +1,4 @@
 import { Component, OnInit, signal, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import type { Observable } from "rxjs";
 import { AdminPanelComponent } from "../../../components/admin/admin-panel/admin-panel.component";
@@ -20,7 +19,6 @@ import { urlValidator } from "../../../validators/custom.validators";
   selector: "app-admin-therapists",
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     AdminPanelComponent,
     AdminEmptyComponent,
