@@ -5,9 +5,9 @@ namespace Domain.Entities
 {
     public sealed class AuditLog : Entity
     {
-        public string EntityType { get; private set; }
+        public string EntityType { get; private set; } = null!;
         public Guid EntityId { get; private set; }
-        public string Action { get; private set; } // Create, Update, Delete
+        public string Action { get; private set; } = null!; // Create, Update, Delete
         public Guid? UserId { get; private set; }
         public string? OldValues { get; private set; } // JSON serialized
         public string? NewValues { get; private set; } // JSON serialized

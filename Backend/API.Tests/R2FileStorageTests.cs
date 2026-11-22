@@ -14,8 +14,7 @@ public sealed class S3Fixture : IAsyncLifetime
     public const string SecretKey = "test-secret-key";
     public const string Bucket = "meraki-test";
 
-    private readonly IContainer _s3 = new ContainerBuilder()
-        .WithImage("adobe/s3mock:3.12.0")
+    private readonly IContainer _s3 = new ContainerBuilder("adobe/s3mock:3.12.0")
         .WithEnvironment("initialBuckets", Bucket)
         .WithPortBinding(9090, assignRandomHostPort: true)
         .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPath("/").ForPort(9090)))

@@ -17,10 +17,10 @@ namespace Domain.Entities
         public const int InstructorMaxLength = 100;
         public const int LinkMaxLength = 300;
 
-        public string Title { get; private set; }
-        public string Description { get; private set; }
+        public string Title { get; private set; } = null!;
+        public string Description { get; private set; } = null!;
         public string? Image { get; private set; }
-        public string Instructor { get; private set; }
+        public string Instructor { get; private set; } = null!;
         public DateTime? StartDate { get; private set; }
         public DateTime? EndDate { get; private set; }
         public Modality? Modality { get; private set; }

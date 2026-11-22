@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <!-- xUnit1051 asks every async call to take TestContext's cancellation token; the tests are short and
+         passing it everywhere is noise, so the build stays at zero warnings without it. -->
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -17,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.15" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageReference Include="Testcontainers.PostgreSql" Version="4.17.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">

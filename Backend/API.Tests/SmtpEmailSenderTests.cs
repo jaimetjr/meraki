@@ -10,8 +10,7 @@ namespace API.Tests;
 /// <summary>Runs Mailpit, a throwaway SMTP server whose HTTP API shows what it received.</summary>
 public sealed class MailpitFixture : IAsyncLifetime
 {
-    private readonly IContainer _mailpit = new ContainerBuilder()
-        .WithImage("axllent/mailpit:v1.21")
+    private readonly IContainer _mailpit = new ContainerBuilder("axllent/mailpit:v1.21")
         .WithPortBinding(1025, assignRandomHostPort: true)
         .WithPortBinding(8025, assignRandomHostPort: true)
         .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPath("/api/v1/info").ForPort(8025)))

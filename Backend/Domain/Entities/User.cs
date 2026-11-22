@@ -11,8 +11,8 @@ namespace Domain.Entities
         public const int EmailMaxLength = 255;
         public const int NameMaxLength = 100;
 
-        public string Email { get; private set; }
-        public string PasswordHash { get; private set; }
+        public string Email { get; private set; } = null!;
+        public string PasswordHash { get; private set; } = null!;
         public UserRole Role { get; private set; }
         public string? FirstName { get; private set; }
         public string? LastName { get; private set; }

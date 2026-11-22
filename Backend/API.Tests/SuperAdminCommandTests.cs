@@ -109,7 +109,9 @@ public class SuperAdminCommandTests(ApiFactory api)
         string connectionString;
         await using (var db = api.CreateDbContext())
         {
+#pragma warning disable EF1003 // CREATE DATABASE takes no parameters; the name is generated above
             await db.Database.ExecuteSqlRawAsync("CREATE DATABASE \"" + name + "\"");
+#pragma warning restore EF1003
             connectionString = new NpgsqlConnectionStringBuilder(db.Database.GetConnectionString()) { Database = name }.ConnectionString;
         }
 

@@ -16,13 +16,13 @@ public sealed class Service : AggregateRoot, ISoftDeletable
     public const int LongDescriptionMaxLength = 1000;
     public const int DurationMaxLength = 50;
 
-    public string Name { get; private set; }
-    public string Description { get; private set; }
+    public string Name { get; private set; } = null!;
+    public string Description { get; private set; } = null!;
     public string? Image { get; private set; }
     public string? LongDescription { get; private set; }
     public List<Benefit> Benefits { get; private set; } = new();
     public string? Duration { get; private set; }
-    public Money Price { get; private set; }
+    public Money Price { get; private set; } = null!;
     public Guid CategoryId { get; private set; }
     public Category? Category { get; private set; }
     public bool IsActive { get; private set; }

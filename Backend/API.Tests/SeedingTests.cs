@@ -79,7 +79,7 @@ public class SeedingTests(ApiFactory api)
     public async Task A_configured_but_inactive_superadmin_is_reactivated_to_recover_from_a_lockout()
     {
         await using var db = await api.CreateFreshDatabaseAsync();
-        var locked = new User(Guid.NewGuid(), Owner.Email, BCrypt.Net.BCrypt.HashPassword("whatever-123"), UserRole.Admin);
+        var locked = new User(Guid.NewGuid(), Owner.Email!, BCrypt.Net.BCrypt.HashPassword("whatever-123"), UserRole.Admin);
         locked.Deactivate();
         db.Users.Add(locked);
         await db.SaveChangesAsync();

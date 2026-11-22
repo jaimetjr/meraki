@@ -14,11 +14,11 @@ namespace Domain.Entities
         public const int BioMaxLength = 500;
         public const int ProIdMaxLength = 200;
 
-        public string Name { get; private set; }
-        public string Bio { get; private set; }
+        public string Name { get; private set; } = null!;
+        public string Bio { get; private set; } = null!;
         public string? Image { get; private set; }
-        public string Experience { get; private set; }
-        public string Education { get; private set; }
+        public string Experience { get; private set; } = null!;
+        public string Education { get; private set; } = null!;
         public string? ProId { get; private set; }
         public List<Specialty> Specialties { get; private set; } = new();
         public bool IsActive { get; private set; }

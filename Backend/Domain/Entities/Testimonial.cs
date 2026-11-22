@@ -10,11 +10,11 @@ namespace Domain.Entities
         public const int AuthorBadgeMaxLength = 50;
         public const int ContentMaxLength = 1000;
 
-        public string AuthorName { get; private set; }
+        public string AuthorName { get; private set; } = null!;
         public string? AuthorAvatarUrl { get; private set; }
         public string? AuthorBadge { get; private set; }
         public int Rating { get; private set; }
-        public string Content { get; private set; }
+        public string Content { get; private set; } = null!;
         public bool IsActive { get; private set; }
 
         // EF Core parameterless constructor

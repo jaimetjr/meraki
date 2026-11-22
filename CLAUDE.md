@@ -159,6 +159,7 @@ Cross-cutting rules:
 - `environment.prod.ts` uses Cloudflare's Turnstile **test** site key, which always passes. Replace it, together with the API's `Turnstile:SecretKey`, before the site is announced.
 - Production e-mail is `Email__Mode=Log` for now: Railway Hobby blocks SMTP, and Brevo's HTTPS API is the planned replacement. The database and the images volume have no backups on Hobby.
 - The LGPD consent text should link to a privacy policy page, which doesn't exist yet.
-- Vulnerable transitive packages are reported at build: `Microsoft.OpenApi` 2.3.0 (via Swashbuckle) and `System.Security.Cryptography.Pkcs/Xml` 9.0.0 (design-time EF only).
+- The backend builds with zero warnings and no vulnerable packages; keep it that way (`dotnet list meraki-api.sln package --vulnerable --include-transitive`). The test project disables only `xUnit1051`.
+- **Angular 19 is out of support** and `npm audit` reports 8 advisories against `@angular/*` <= 19.2.25. The fixes exist only in newer majors, so the frontend needs a major upgrade (`ng update` one version at a time).
 - The production build warns "19 rules skipped due to selector errors", coming from Tailwind output for the global `styles.css`.
 - **R2 has only been tested against an S3 emulator.** Verify one upload and delete against the real bucket before going live.

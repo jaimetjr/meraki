@@ -13,7 +13,7 @@ namespace Domain.Entities
         public const int NameMaxLength = 100;
         public const int DescriptionMaxLength = 300;
 
-        public string Name { get; private set; }
+        public string Name { get; private set; } = null!;
         public string? Description { get; private set; }
         public bool IsActive { get; private set; }
 

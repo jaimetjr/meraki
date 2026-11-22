@@ -12,7 +12,7 @@ namespace Domain.Entities
     {
         public const int NameMaxLength = 50;
 
-        public string Name { get; private set; }
+        public string Name { get; private set; } = null!;
         public bool IsActive { get; private set; }
 
         // EF Core parameterless constructor
