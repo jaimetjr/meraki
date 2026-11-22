@@ -69,6 +69,7 @@ Startup seeding (`Infrastructure/Data/Seeder.cs`) always ensures the SuperAdmin.
 $env:ConnectionStrings__DefaultConnection="<DATABASE_PUBLIC_URL>"; dotnet run --project API -- --create-superadmin; Remove-Item Env:ConnectionStrings__DefaultConnection
 ```
 
+- Railway's Postgres is private by default. For this command, temporarily add a TCP Proxy (Postgres → Settings → Networking), which creates `DATABASE_PUBLIC_URL`; remove it afterwards.
 - It prompts for e-mail, name and password, then creates that SuperAdmin. With an existing e-mail it resets the password, promotes the account and reactivates it.
 - It exits before seeding, so no demo content is added.
 - Clearing the variable at the end matters: a later plain `dotnet run` in that terminal would otherwise run in Development against production and seed demo content into it.
