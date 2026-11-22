@@ -1,0 +1,11 @@
+.git
+.claude
+.superpowers
+**/bin
+**/obj
+**/node_modules
+**/TestResults
+**/*.user
+Frontend/dist
+Frontend/.angular
+Backend/API/wwwroot/uploads

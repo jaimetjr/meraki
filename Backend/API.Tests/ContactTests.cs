@@ -153,4 +153,26 @@ public class ContactTests(ApiFactory api)
 
         Assert.Equal(HttpStatusCode.TooManyRequests, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Behind_a_proxy_each_visitor_still_gets_their_own_quota()
+    {
+        // On Railway every request comes from its proxy; the visitor's own address is in X-Forwarded-For.
+        HttpClient ThroughProxy(string visitorIp)
+        {
+            var client = api.CreateClient();
+            client.DefaultRequestHeaders.Add(TestClientIpStartupFilter.Header, "172.16.0.1");
+            client.DefaultRequestHeaders.Add("X-Forwarded-For", visitorIp);
+            return client;
+        }
+        var flooder = ThroughProxy("10.1.0.1");
+        for (var i = 0; i < ApiFactory.ContactRateLimitPerHour; i++)
+            await flooder.PostAsJsonAsync("/api/contact", Message(Http.Unique("Flood")));
+        Assert.Equal(HttpStatusCode.TooManyRequests,
+            (await flooder.PostAsJsonAsync("/api/contact", Message(Http.Unique("Flood")))).StatusCode);
+
+        var response = await ThroughProxy("10.1.0.2").PostAsJsonAsync("/api/contact", Message(Http.Unique("Other")));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
 }

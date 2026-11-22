@@ -5,7 +5,9 @@ using API.Common;
 using FluentValidation;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -60,8 +62,30 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod());
 });
 
+// The host (Railway) puts a proxy in front of the app: take the visitor's IP (per-IP contact limit) and
+// https from its headers. Only the proxy can reach the app there, so any sender is trusted.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
 
+// Deploy step (Railway's pre-deploy command): `dotnet API.dll --migrate` applies pending migrations and exits.
+if (args.Contains("--migrate"))
+{
+    using var migrationScope = app.Services.CreateScope();
+    await migrationScope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+    app.Logger.LogInformation("Database migrations applied.");
+    return;
+}
+
+// The production image builds the Angular site into wwwroot; this service then serves it next to /api.
+var servesSite = app.Environment.WebRootPath is { } webRoot && File.Exists(Path.Combine(webRoot, "index.html"));
+
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
 if (!app.Environment.IsDevelopment())
 {
@@ -78,12 +102,23 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 });
 
 app.UseLocalUploads();
+if (servesSite)
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+}
 app.UseRouting();
 app.UseCors("FrontendPolicy");
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+if (servesSite)
+{
+    // Site routes (/cursos, /admin/users…) load index.html even on refresh; unknown /api routes stay 404.
+    app.MapFallback("/api/{**path}", () => Results.NotFound());
+    app.MapFallbackToFile("index.html");
+}
 
 if (app.Environment.IsDevelopment())
 {
