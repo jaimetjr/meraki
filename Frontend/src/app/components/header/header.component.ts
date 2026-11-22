@@ -1,4 +1,4 @@
-import { Component, inject } from "@angular/core"
+import { Component, inject, ChangeDetectionStrategy } from "@angular/core"
 import { Router, RouterLink, NavigationEnd } from "@angular/router"
 import { NgOptimizedImage } from "@angular/common"
 import { ScrollService } from "../../services/scroll.service"
@@ -9,6 +9,7 @@ import { filter, take } from "rxjs/operators"
   standalone: true,
   imports: [RouterLink, NgOptimizedImage],
   templateUrl: "./header.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./header.component.css",
 })
 export class HeaderComponent {

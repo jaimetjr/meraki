@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Monorepo for the Meraki Saúde Integrativa clinic: a public site plus an admin CMS (`Frontend/`, Angular 19) backed by a REST API (`Backend/`, ASP.NET Core / .NET 10, PostgreSQL). UI text and seed data are Portuguese (pt-BR); code is English.
+Monorepo for the Meraki Saúde Integrativa clinic: a public site plus an admin CMS (`Frontend/`, Angular 22) backed by a REST API (`Backend/`, ASP.NET Core / .NET 10, PostgreSQL). UI text and seed data are Portuguese (pt-BR); code is English.
 
 ## Commands
 
@@ -138,7 +138,13 @@ Cross-cutting rules:
 
 ## Frontend architecture
 
-- Angular 19 **standalone components only**, `inject()`, signals, new control flow (`@if`/`@for`). Strict TypeScript and templates.
+- Angular 22 **standalone components only**, `inject()`, signals, new control flow (`@if`/`@for`). Strict TypeScript and templates. Builders come from `@angular/build` (esbuild/Vite); there is no webpack.
+- The app was upgraded from 19 and keeps the pre-22 runtime defaults on purpose:
+  - zone.js change detection via `provideZoneChangeDetection()` in `app.config.ts` (zoneless is the default since 21);
+  - `changeDetection: ChangeDetectionStrategy.Eager` on every existing component (OnPush is the default since 22);
+  - `HttpClient` with `withXhr()` (fetch is the default since 22).
+
+  Switching any of these is a behavior change. Test it in the browser, not only in the specs.
 - `app.config.ts` registers interceptors in order `loading → error → auth`.
   - `errorInterceptor` retries **only GET/HEAD** on 5xx.
   - `authInterceptor` attaches the bearer token and logs out on 401 **and 403** (known issue, see below).
@@ -150,7 +156,7 @@ Cross-cutting rules:
 - `services/*.service.ts` are thin `HttpClient` wrappers, one per resource (`ServicesService` is the only client for `/api/services`). Admin pages build `FormData` matching the multipart contract above.
 - `ImageOrInitialsComponent` renders an image, or the name's initials when it is missing or fails to load. Use it instead of `<img>`/`NgOptimizedImage` for API images, which can be null.
 - `TurnstileWidgetComponent` wraps Cloudflare Turnstile. Tokens are single-use, so call `reset()` after each submit.
-- Tailwind CSS 4 via `@tailwindcss/postcss`; the theme lives in `src/styles.css` (`@theme inline`). Don't add a `tailwind.config.*` file: Karma's webpack builder treats it as a v3 PostCSS plugin and `ng test` crashes.
+- Tailwind CSS 4 via `@tailwindcss/postcss`; the theme lives in `src/styles.css` (`@theme inline`). Tailwind 4 doesn't read `tailwind.config.*` files, so don't add one.
 
 ## Known gaps / follow-ups
 
@@ -160,6 +166,9 @@ Cross-cutting rules:
 - Production e-mail is `Email__Mode=Log` for now: Railway Hobby blocks SMTP, and Brevo's HTTPS API is the planned replacement. The database and the images volume have no backups on Hobby.
 - The LGPD consent text should link to a privacy policy page, which doesn't exist yet.
 - The backend builds with zero warnings and no vulnerable packages; keep it that way (`dotnet list meraki-api.sln package --vulnerable --include-transitive`). The test project disables only `xUnit1051`.
-- **Angular 19 is out of support** and `npm audit` reports 8 advisories against `@angular/*` <= 19.2.25. The fixes exist only in newer majors, so the frontend needs a major upgrade (`ng update` one version at a time).
-- The production build warns "19 rules skipped due to selector errors", coming from Tailwind output for the global `styles.css`.
+- The frontend has no `npm audit` findings; keep it that way. Upgrade Angular with `ng update`, one major version at a time.
+- **Frontend tests still run on Karma** (`@angular/build:karma`), which Angular 22 calls legacy.
+  - Karma itself is deprecated and pulls in deprecated `glob@7`/`rimraf@3`/`inflight` (test-only).
+  - The move is `ng update @angular/cli --name migrate-karma-to-vitest`, then rewriting the 12 specs' `jasmine.createSpyObj`/`.and.returnValue` calls.
+- `GET /api/consultoriome/professionals` returns 500 when `ConsultorioME:*` isn't configured, so the admin Terapeutas page shows "Erro interno do servidor" on load.
 - **R2 has only been tested against an S3 emulator.** Verify one upload and delete against the real bucket before going live.

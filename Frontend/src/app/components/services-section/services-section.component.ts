@@ -1,4 +1,4 @@
-import { Component, input } from "@angular/core"
+import { Component, input, ChangeDetectionStrategy } from "@angular/core"
 import type { Service } from "../../models/service.model"
 import { ServiceCardComponent } from "../service-card/service-card.component"
 
@@ -7,6 +7,7 @@ import { ServiceCardComponent } from "../service-card/service-card.component"
   standalone: true,
   imports: [ServiceCardComponent],
   templateUrl: "./services-section.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./services-section.component.css",
 })
 export class ServicesSectionComponent {

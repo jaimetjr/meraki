@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from "@angular/core";
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from "@angular/core";
 import { DatePipe } from "@angular/common";
 import { AdminPanelComponent } from "../../../components/admin/admin-panel/admin-panel.component";
 import { AdminEmptyComponent } from "../../../components/admin/admin-empty/admin-empty.component";
@@ -14,6 +14,7 @@ import type { ContactMessage } from "../../../models/contact.model";
   standalone: true,
   imports: [DatePipe, AdminPanelComponent, AdminEmptyComponent, AdminLoadingComponent, AdminConfirmDialogComponent],
   templateUrl: "./messages.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./messages.component.css",
 })
 export class MessagesComponent implements OnInit {

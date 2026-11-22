@@ -1,9 +1,10 @@
-import { Component, input, output } from "@angular/core";
+import { Component, input, output, ChangeDetectionStrategy } from "@angular/core";
 
 @Component({
   selector: "app-admin-form-modal",
   standalone: true,
   templateUrl: "./admin-form-modal.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./admin-form-modal.component.css",
 })
 export class AdminFormModalComponent {

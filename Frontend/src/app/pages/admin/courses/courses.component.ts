@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from "@angular/core";
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import type { Observable } from "rxjs";
@@ -30,6 +30,7 @@ import { urlValidator, dateRangeValidator } from "../../../validators/custom.val
     AdminFormModalComponent,
   ],
   templateUrl: "./courses.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./courses.component.css",
 })
 export class CoursesComponent implements OnInit {

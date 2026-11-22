@@ -1,4 +1,4 @@
-import { Component, computed, input, signal } from "@angular/core"
+import { Component, computed, input, signal, ChangeDetectionStrategy } from "@angular/core"
 
 /** "Dra. Ana Souza" → "AS": first and last word, ignoring titles that end with a dot. */
 export function initialsOf(text: string): string {
@@ -16,6 +16,7 @@ export function initialsOf(text: string): string {
 @Component({
   selector: "app-image-or-initials",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     @if (showImage()) {
       <img [src]="src()" [alt]="alt()" [class]="imageClass()" loading="lazy" (error)="failedSrc.set(src())">

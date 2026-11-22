@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from "@angular/core";
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import type { Observable } from "rxjs";
 import { AdminPanelComponent } from "../../../components/admin/admin-panel/admin-panel.component";
@@ -28,6 +28,7 @@ import { urlValidator } from "../../../validators/custom.validators";
     AdminFormModalComponent,
   ],
   templateUrl: "./therapists.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./therapists.component.css",
 })
 export class TherapistsComponent implements OnInit {

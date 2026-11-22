@@ -1,4 +1,4 @@
-import { Component, OnDestroy, inject, signal, computed } from "@angular/core";
+import { Component, OnDestroy, inject, signal, computed, ChangeDetectionStrategy } from "@angular/core";
 import { Subscription } from "rxjs";
 import { AuthService } from "../../../services/auth.service";
 import { AdminPanelComponent } from "../../../components/admin/admin-panel/admin-panel.component";
@@ -10,6 +10,7 @@ import type { AnalyticsData, TimeRange } from "../../../models/analytics.model";
   standalone: true,
   imports: [AdminPanelComponent],
   templateUrl: "./dashboard.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./dashboard.component.css",
 })
 export class DashboardComponent implements OnDestroy {

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from "@angular/core";
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import type { Observable } from "rxjs";
 import { AdminPanelComponent } from "../../../components/admin/admin-panel/admin-panel.component";
@@ -24,6 +24,7 @@ import type { Testimonial } from "../../../models/testimonial.model";
     AdminFormModalComponent,
   ],
   templateUrl: "./testimonials.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./testimonials.component.css",
 })
 export class TestimonialsComponent implements OnInit {

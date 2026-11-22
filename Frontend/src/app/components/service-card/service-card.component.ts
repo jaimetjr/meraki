@@ -1,4 +1,4 @@
-import { Component, input, inject } from "@angular/core"
+import { Component, input, inject, ChangeDetectionStrategy } from "@angular/core"
 import { ImageOrInitialsComponent } from "../image-or-initials/image-or-initials.component"
 import type { Service } from "../../models/service.model"
 import { DialogService } from "../../services/dialog.service"
@@ -8,6 +8,7 @@ import { DialogService } from "../../services/dialog.service"
   standalone: true,
   imports: [ImageOrInitialsComponent],
   templateUrl: "./service-card.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./service-card.component.css",
 })
 export class ServiceCardComponent {

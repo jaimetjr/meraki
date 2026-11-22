@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, inject, signal, viewChild } from "@angular/core"
+import { Component, DestroyRef, OnInit, inject, signal, viewChild, ChangeDetectionStrategy } from "@angular/core"
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms"
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop"
 import { finalize } from "rxjs/operators"
@@ -17,6 +17,7 @@ const OTHER_SERVICE = "Outro"
   standalone: true,
   imports: [ReactiveFormsModule, TurnstileWidgetComponent],
   templateUrl: "./contact-form.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./contact-form.component.css",
 })
 export class ContactFormComponent implements OnInit {

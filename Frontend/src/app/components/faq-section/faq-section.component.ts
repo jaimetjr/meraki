@@ -1,4 +1,4 @@
-import { Component } from "@angular/core"
+import { Component, ChangeDetectionStrategy } from "@angular/core"
 
 interface FAQItem {
   question: string
@@ -9,6 +9,7 @@ interface FAQItem {
   selector: "app-faq-section",
   standalone: true,
   templateUrl: "./faq-section.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./faq-section.component.css",
 })
 export class FaqSectionComponent {

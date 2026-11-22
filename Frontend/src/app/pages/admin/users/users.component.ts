@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, computed } from "@angular/core";
+import { Component, OnInit, signal, inject, computed, ChangeDetectionStrategy } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import type { Observable } from "rxjs";
 import { AdminPanelComponent } from "../../../components/admin/admin-panel/admin-panel.component";
@@ -29,6 +29,7 @@ const PASSWORD_MIN_LENGTH = 8;
     AdminFormModalComponent,
   ],
   templateUrl: "./users.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./users.component.css",
 })
 export class UsersComponent implements OnInit {

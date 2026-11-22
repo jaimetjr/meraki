@@ -1,4 +1,4 @@
-import { Component, input } from "@angular/core"
+import { Component, input, ChangeDetectionStrategy } from "@angular/core"
 import { ImageOrInitialsComponent } from "../image-or-initials/image-or-initials.component"
 import type { Testimonial } from "../../models/testimonial.model"
 
@@ -7,6 +7,7 @@ import type { Testimonial } from "../../models/testimonial.model"
   standalone: true,
   imports: [ImageOrInitialsComponent],
   templateUrl: "./testimonials-section.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./testimonials-section.component.css",
 })
 export class TestimonialsSectionComponent {

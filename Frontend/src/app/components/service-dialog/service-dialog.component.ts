@@ -1,4 +1,4 @@
-import { Component, type OnInit, type OnDestroy, inject, effect, ElementRef, ViewChild, AfterViewInit } from "@angular/core"
+import { Component, type OnInit, type OnDestroy, inject, effect, ElementRef, ViewChild, AfterViewInit, ChangeDetectionStrategy } from "@angular/core"
 import { DialogService } from "../../services/dialog.service"
 import { ViewportScroller } from "@angular/common"
 
@@ -6,6 +6,7 @@ import { ViewportScroller } from "@angular/common"
   selector: "app-service-dialog",
   standalone: true,
   templateUrl: "./service-dialog.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./service-dialog.component.css",
 })
 export class ServiceDialogComponent implements OnInit, OnDestroy, AfterViewInit {

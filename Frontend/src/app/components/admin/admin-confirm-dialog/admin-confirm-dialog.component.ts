@@ -1,9 +1,10 @@
-import { Component, input, output } from "@angular/core";
+import { Component, input, output, ChangeDetectionStrategy } from "@angular/core";
 
 @Component({
   selector: "app-admin-confirm-dialog",
   standalone: true,
   templateUrl: "./admin-confirm-dialog.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./admin-confirm-dialog.component.css",
 })
 export class AdminConfirmDialogComponent {

@@ -1,4 +1,4 @@
-import { Component, input } from "@angular/core"
+import { Component, input, ChangeDetectionStrategy } from "@angular/core"
 import { ImageOrInitialsComponent } from "../image-or-initials/image-or-initials.component"
 import type { Therapist } from "../../models/therapist.model"
 
@@ -7,6 +7,7 @@ import type { Therapist } from "../../models/therapist.model"
   standalone: true,
   imports: [ImageOrInitialsComponent],
   templateUrl: "./therapist-card.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./therapist-card.component.css",
 })
 export class TherapistCardComponent {

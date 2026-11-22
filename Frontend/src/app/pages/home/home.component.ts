@@ -1,4 +1,4 @@
-import { Component, type OnInit, inject, signal, DestroyRef } from "@angular/core"
+import { Component, type OnInit, inject, signal, DestroyRef, ChangeDetectionStrategy } from "@angular/core"
 import { NgOptimizedImage } from "@angular/common"
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop"
 import type { Therapist } from "../../models/therapist.model"
@@ -32,6 +32,7 @@ import { TestimonialsSectionComponent } from "../../components/testimonials-sect
     TestimonialsSectionComponent,
   ],
   templateUrl: "./home.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./home.component.css",
 })
 export class HomeComponent implements OnInit {

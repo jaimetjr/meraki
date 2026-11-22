@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, effect } from '@angular/core';
+import { Component, inject, signal, computed, effect, ChangeDetectionStrategy } from '@angular/core';
 import { ErrorService, type ErrorSeverity } from '../../services/error.service';
 
 export interface Toast {
@@ -16,6 +16,7 @@ export interface Toast {
   selector: 'app-toast',
   standalone: true,
   templateUrl: './toast.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './toast.component.css',
 })
 export class ToastComponent {

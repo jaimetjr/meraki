@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnDestroy, inject, OnInit, signal } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { HeaderComponent } from "./components/header/header.component";
 import { ToastComponent } from "./components/toast/toast.component";
@@ -12,6 +12,7 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [RouterOutlet, HeaderComponent, ToastComponent],
   templateUrl: './app.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.component.css',
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, input, output, viewChild } from "@angular/core"
+import { AfterViewInit, Component, ElementRef, OnDestroy, input, output, viewChild, ChangeDetectionStrategy } from "@angular/core"
 
 interface TurnstileApi {
   render(element: HTMLElement, options: Record<string, unknown>): string
@@ -39,6 +39,7 @@ function loadTurnstile(): Promise<TurnstileApi> {
 @Component({
   selector: "app-turnstile-widget",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `<div #container></div>`,
 })
 export class TurnstileWidgetComponent implements AfterViewInit, OnDestroy {

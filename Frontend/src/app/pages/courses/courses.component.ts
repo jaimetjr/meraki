@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, DestroyRef } from "@angular/core"
+import { Component, OnInit, inject, signal, DestroyRef, ChangeDetectionStrategy } from "@angular/core"
 import { NgClass, DatePipe } from "@angular/common"
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop"
 import { CoursesService } from "../../services/courses.service"
@@ -15,6 +15,7 @@ import { ImageOrInitialsComponent } from "../../components/image-or-initials/ima
   standalone: true,
   imports: [NgClass, DatePipe, FooterComponent, ImageOrInitialsComponent],
   templateUrl: "./courses.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./courses.component.css",
 })
 export class CoursesComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from "@angular/core";
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import type { Observable } from "rxjs";
 import { AdminPanelComponent } from "../../../components/admin/admin-panel/admin-panel.component";
@@ -24,6 +24,7 @@ import type { Category } from "../../../models/category.model";
     AdminFormModalComponent,
   ],
   templateUrl: "./categories.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./categories.component.css",
 })
 export class CategoriesComponent implements OnInit {

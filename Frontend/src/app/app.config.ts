@@ -2,7 +2,7 @@ import { type ApplicationConfig, LOCALE_ID, ErrorHandler, isDevMode, provideZone
 import { registerLocaleData } from "@angular/common"
 import localePt from "@angular/common/locales/pt"
 import { provideRouter, withViewTransitions, withComponentInputBinding, withInMemoryScrolling } from "@angular/router"
-import { provideHttpClient, withInterceptors } from "@angular/common/http"
+import { provideHttpClient, withInterceptors, withXhr } from "@angular/common/http"
 import { provideServiceWorker } from "@angular/service-worker"
 import { routes } from "./app.routes"
 import { MaintenanceService } from "./services/maintenance.service"
@@ -27,6 +27,7 @@ export const appConfig: ApplicationConfig = {
       })
     ),
     provideHttpClient(
+      withXhr(),
       withInterceptors([
         loadingInterceptor,
         errorInterceptor,

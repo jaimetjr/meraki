@@ -1,4 +1,4 @@
-import { Component, OnDestroy, inject, signal, computed, effect } from "@angular/core";
+import { Component, OnDestroy, inject, signal, computed, effect, ChangeDetectionStrategy } from "@angular/core";
 import { Router, RouterLink, RouterOutlet, NavigationEnd } from "@angular/router";
 import { Subscription, filter } from "rxjs";
 import { AuthService } from "../../../services/auth.service";
@@ -26,6 +26,7 @@ const SUPER_ADMIN_NAV_ITEMS = [
   standalone: true,
   imports: [RouterOutlet, RouterLink],
   templateUrl: "./admin-shell.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./admin-shell.component.css",
 })
 export class AdminShellComponent implements OnDestroy {
