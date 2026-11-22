@@ -2,6 +2,7 @@ using API.Features.Users;
 using Domain.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace API.Common;
 
@@ -55,25 +56,51 @@ public static class CreateSuperAdminCommand
         return 0;
     }
 
-    /// <summary>Checked before asking for anything, so a wrong address doesn't cost you typing the password.</summary>
+    /// <summary>
+    /// Checked before asking for anything, so a wrong address doesn't cost you typing the password. Says which
+    /// server it tried and why it failed (never the password), with the fix for the usual Railway mistakes.
+    /// </summary>
     private static async Task<string?> DatabaseProblemAsync(AppDbContext db)
     {
+        if (AddressMistake(db.Database.GetConnectionString() ?? "", out var where) is { } mistake) return mistake;
         try
         {
-            if (!await db.Database.CanConnectAsync()) return CannotConnect;
+            await db.Database.OpenConnectionAsync();
+            await db.Database.CloseConnectionAsync();
             if ((await db.Database.GetPendingMigrationsAsync()).Any())
                 return "O banco ainda não tem as tabelas. Faça o deploy primeiro e espere o log \"Database migrations applied.\".";
             return null;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            return CannotConnect;
+            while (exception.InnerException is { } inner) exception = inner;
+            return $"Não foi possível conectar ao banco em {where}: {exception.Message}\n{UsePublicUrl}";
         }
     }
 
-    private const string CannotConnect =
-        "Não foi possível conectar ao banco de dados. No Railway, use o DATABASE_PUBLIC_URL do Postgres " +
-        "(endereço ….proxy.rlwy.net); o DATABASE_URL (postgres.railway.internal) só funciona dentro do Railway.";
+    private static string? AddressMistake(string connectionString, out string where)
+    {
+        where = "";
+        if (connectionString.Contains("${{"))
+            return "Você copiou o modelo da variável (com ${{...}}), não o valor. No Railway: Postgres → Variables → " +
+                   "DATABASE_PUBLIC_URL → ícone de copiar ao lado do valor.";
+
+        NpgsqlConnectionStringBuilder address;
+        try { address = new NpgsqlConnectionStringBuilder(connectionString); }
+        catch (ArgumentException) { return Incomplete; }
+        if (string.IsNullOrWhiteSpace(address.Host)) return Incomplete;
+        if (address.Host.EndsWith(".railway.internal", StringComparison.OrdinalIgnoreCase))
+            return $"{address.Host} é o endereço interno do Railway (DATABASE_URL), que só funciona lá dentro. {UsePublicUrl}";
+
+        where = $"{address.Host}:{address.Port}/{address.Database}";
+        return null;
+    }
+
+    private const string UsePublicUrl = "Use o DATABASE_PUBLIC_URL do Postgres no Railway (endereço ….proxy.rlwy.net:porta).";
+
+    private const string Incomplete =
+        "O endereço do banco está incompleto ou inválido. Se o DATABASE_PUBLIC_URL do Postgres estiver vazio ou sem " +
+        "servidor, ative o acesso público em Postgres → Settings → Networking → TCP Proxy e copie o valor de novo.";
 
     /// <summary>Reads a password without echoing it (falls back to a plain line when input is redirected).</summary>
     public static string ReadHidden()

@@ -80,10 +80,25 @@ public class SuperAdminCommandTests(ApiFactory api)
     public async Task An_unreachable_database_is_reported_before_asking_for_anything()
     {
         // e.g. Railway's internal DATABASE_URL, which only resolves inside Railway.
-        var (exitCode, output) = await RunAgainstAsync("Host=postgres.railway.invalid;Database=railway;Username=u;Password=p;Timeout=5");
+        var (exitCode, output) = await RunAgainstAsync("Host=nowhere.railway.invalid;Port=41234;Database=railway;Username=u;Password=secret-pw;Timeout=5");
 
         Assert.Equal(1, exitCode);
+        Assert.Contains("nowhere.railway.invalid:41234/railway", output); // where it tried…
+        Assert.DoesNotContain("secret-pw", output);                       // …never the password
         Assert.Contains("DATABASE_PUBLIC_URL", output);
+        Assert.DoesNotContain("E-mail:", output);
+    }
+
+    [Theory]
+    [InlineData("postgresql://postgres:pw@postgres.railway.internal:5432/railway", "interno")]
+    [InlineData("postgresql://${{PGUSER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_TCP_PROXY_DOMAIN}}:${{RAILWAY_TCP_PROXY_PORT}}/railway", "modelo")]
+    [InlineData("postgresql://postgres:pw@:/railway", "TCP Proxy")]
+    public async Task Common_address_mistakes_get_a_specific_explanation(string address, string explanation)
+    {
+        var (exitCode, output) = await RunAgainstAsync(DatabaseUrl.ToConnectionString(address));
+
+        Assert.Equal(1, exitCode);
+        Assert.Contains(explanation, output);
         Assert.DoesNotContain("E-mail:", output);
     }
 
