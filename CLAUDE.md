@@ -49,7 +49,7 @@ Committed `Backend/API/appsettings.json` holds only non-secret defaults. `appset
 |---|---|
 | `ConnectionStrings:DefaultConnection` | PostgreSQL (secret) |
 | `Jwt:SecretKey` (secret), `Jwt:Issuer`, `Jwt:Audience`, `Jwt:ExpirationMinutes` | Auth tokens; the secret is required at startup |
-| `Seed:SuperAdmin:Email` / `Password` (secret) | Startup creates this SuperAdmin if no active SuperAdmin exists, or promotes/reactivates it if the e-mail exists (lockout recovery) |
+| `Seed:SuperAdmin:Email` / `Password` (secret, **local only**) | Startup creates this SuperAdmin if no active SuperAdmin exists, or promotes/reactivates it if the e-mail exists. Production doesn't set it; use `--create-superadmin` instead |
 | `Cors:AllowedOrigins` | Frontend origins (array) |
 | `Storage:Provider` (`Local` \| `R2`), `Storage:PublicBaseUrl` | Where images go and the URL prefix browsers load them from. `PublicBaseUrl` has no default outside `appsettings.Development.json`; startup fails without it |
 | `Storage:Local:RootPath` | Local uploads folder (default `API/wwwroot/uploads`, gitignored, served at the path of `PublicBaseUrl`) |
@@ -60,6 +60,18 @@ Committed `Backend/API/appsettings.json` holds only non-secret defaults. `appset
 | `ConsultorioME:ClientId/Secret/BaseUrl` | External scheduling platform, only needed by `/api/consultoriome` |
 
 Startup seeding (`Infrastructure/Data/Seeder.cs`) always ensures the SuperAdmin. In **Development only**, it also adds demo content, without images.
+
+`ConnectionStrings:DefaultConnection` also accepts a `postgresql://user:pass@host:port/db` URL (`DatabaseUrl`), which is how Railway provides it.
+
+**Production admin, with no credentials stored in the host:** run this from your own machine in one PowerShell line:
+
+```powershell
+$env:ConnectionStrings__DefaultConnection="<DATABASE_PUBLIC_URL>"; dotnet run --project API -- --create-superadmin; Remove-Item Env:ConnectionStrings__DefaultConnection
+```
+
+- It prompts for e-mail, name and password, then creates that SuperAdmin. With an existing e-mail it resets the password, promotes the account and reactivates it.
+- It exits before seeding, so no demo content is added.
+- Clearing the variable at the end matters: a later plain `dotnet run` in that terminal would otherwise run in Development against production and seed demo content into it.
 
 ## Backend architecture
 

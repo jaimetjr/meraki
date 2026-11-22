@@ -82,6 +82,13 @@ if (args.Contains("--migrate"))
     return;
 }
 
+// One-off, from your own machine: create the first SuperAdmin (or reset its password) without storing credentials.
+if (args.Contains(CreateSuperAdminCommand.Flag))
+{
+    Environment.ExitCode = await CreateSuperAdminCommand.RunAsync(app.Services, Console.In, Console.Out, CreateSuperAdminCommand.ReadHidden);
+    return;
+}
+
 // The production image builds the Angular site into wwwroot; this service then serves it next to /api.
 var servesSite = app.Environment.WebRootPath is { } webRoot && File.Exists(Path.Combine(webRoot, "index.html"));
 

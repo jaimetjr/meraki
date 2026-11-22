@@ -53,6 +53,33 @@ public static class Seeder
         await db.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Creates a SuperAdmin with this e-mail or, if the e-mail already exists, sets its password and makes it an
+    /// active SuperAdmin. Used by the <c>--create-superadmin</c> command: the first admin in production and the
+    /// way back in after a forgotten password. Returns true when the account was created.
+    /// </summary>
+    public static async Task<bool> SetSuperAdminAsync(AppDbContext db, string email, string firstName, string password)
+    {
+        email = email.Trim().ToLowerInvariant();
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var created = user is null;
+        if (user is null)
+        {
+            user = new User(Guid.NewGuid(), email, passwordHash, UserRole.SuperAdmin);
+            db.Users.Add(user);
+        }
+        else
+        {
+            user.UpdatePassword(passwordHash);
+            user.UpdateRole(UserRole.SuperAdmin);
+            user.Activate();
+        }
+        user.UpdateProfile(firstName.Trim(), user.LastName);
+        await db.SaveChangesAsync();
+        return created;
+    }
+
     private static async Task SeedDemoContentAsync(AppDbContext db)
     {
         if (!await db.Categories.AnyAsync())
