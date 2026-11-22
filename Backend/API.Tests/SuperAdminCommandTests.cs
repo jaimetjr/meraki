@@ -1,7 +1,10 @@
 using API.Common;
 using API.Tests.Infrastructure;
 using Domain.Enums;
+using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace API.Tests;
 
@@ -61,6 +64,45 @@ public class SuperAdminCommandTests(ApiFactory api)
         Assert.Contains("'Senha'", output);
         await using var db = api.CreateDbContext();
         Assert.False(await db.Users.AnyAsync(u => u.Email == email));
+    }
+
+    private static async Task<(int ExitCode, string Output)> RunAgainstAsync(string connectionString)
+    {
+        await using var services = new ServiceCollection()
+            .AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString))
+            .BuildServiceProvider();
+        var output = new StringWriter();
+        var exitCode = await CreateSuperAdminCommand.RunAsync(services, new StringReader(""), output, () => "");
+        return (exitCode, output.ToString());
+    }
+
+    [Fact]
+    public async Task An_unreachable_database_is_reported_before_asking_for_anything()
+    {
+        // e.g. Railway's internal DATABASE_URL, which only resolves inside Railway.
+        var (exitCode, output) = await RunAgainstAsync("Host=postgres.railway.invalid;Database=railway;Username=u;Password=p;Timeout=5");
+
+        Assert.Equal(1, exitCode);
+        Assert.Contains("DATABASE_PUBLIC_URL", output);
+        Assert.DoesNotContain("E-mail:", output);
+    }
+
+    [Fact]
+    public async Task A_database_without_its_tables_says_to_deploy_first()
+    {
+        var name = $"empty_{Guid.NewGuid():N}";
+        string connectionString;
+        await using (var db = api.CreateDbContext())
+        {
+            await db.Database.ExecuteSqlRawAsync("CREATE DATABASE \"" + name + "\"");
+            connectionString = new NpgsqlConnectionStringBuilder(db.Database.GetConnectionString()) { Database = name }.ConnectionString;
+        }
+
+        var (exitCode, output) = await RunAgainstAsync(connectionString);
+
+        Assert.Equal(1, exitCode);
+        Assert.Contains("deploy", output);
+        Assert.DoesNotContain("E-mail:", output);
     }
 
     [Fact]

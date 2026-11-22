@@ -1,6 +1,7 @@
 using API.Features.Users;
 using Domain.Enums;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Common;
 
@@ -16,6 +17,15 @@ public static class CreateSuperAdminCommand
 
     public static async Task<int> RunAsync(IServiceProvider services, TextReader input, TextWriter output, Func<string> readSecret)
     {
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        if (await DatabaseProblemAsync(db) is { } problem)
+        {
+            output.WriteLine(problem);
+            output.WriteLine("Nada foi alterado.");
+            return 1;
+        }
+
         output.Write("E-mail: ");
         var email = input.ReadLine()?.Trim() ?? "";
         output.Write("Nome: ");
@@ -38,13 +48,32 @@ public static class CreateSuperAdminCommand
             return 1;
         }
 
-        using var scope = services.CreateScope();
-        var created = await Seeder.SetSuperAdminAsync(scope.ServiceProvider.GetRequiredService<AppDbContext>(), email, firstName, password);
+        var created = await Seeder.SetSuperAdminAsync(db, email, firstName, password);
         output.WriteLine(created
             ? $"SuperAdmin {email} criado. Já pode entrar em /admin/login."
             : $"Senha de {email} redefinida; a conta agora é um SuperAdmin ativo.");
         return 0;
     }
+
+    /// <summary>Checked before asking for anything, so a wrong address doesn't cost you typing the password.</summary>
+    private static async Task<string?> DatabaseProblemAsync(AppDbContext db)
+    {
+        try
+        {
+            if (!await db.Database.CanConnectAsync()) return CannotConnect;
+            if ((await db.Database.GetPendingMigrationsAsync()).Any())
+                return "O banco ainda não tem as tabelas. Faça o deploy primeiro e espere o log \"Database migrations applied.\".";
+            return null;
+        }
+        catch (Exception)
+        {
+            return CannotConnect;
+        }
+    }
+
+    private const string CannotConnect =
+        "Não foi possível conectar ao banco de dados. No Railway, use o DATABASE_PUBLIC_URL do Postgres " +
+        "(endereço ….proxy.rlwy.net); o DATABASE_URL (postgres.railway.internal) só funciona dentro do Railway.";
 
     /// <summary>Reads a password without echoing it (falls back to a plain line when input is redirected).</summary>
     public static string ReadHidden()
