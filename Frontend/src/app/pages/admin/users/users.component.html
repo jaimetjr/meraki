@@ -47,7 +47,12 @@
           </div>
           <div class="row-actions">
             <button class="btn-ghost" (click)="startEdit(user)">Editar</button>
-            <button class="btn-danger" (click)="confirmDelete(user.id!)">Excluir</button>
+            <button
+              class="btn-danger"
+              [disabled]="isSelf(user.id)"
+              [title]="isSelf(user.id) ? 'Você não pode excluir sua própria conta' : ''"
+              (click)="confirmDelete(user.id!)"
+            >Excluir</button>
           </div>
         </div>
       }
@@ -136,6 +141,11 @@
             <option [ngValue]="false">Inativo</option>
           </select>
         </label>
+        @if (editingSelf()) {
+          <p class="col-span-2 text-sm muted">
+            Você não pode alterar seu próprio papel nem desativar sua própria conta. Peça a outro Super Admin.
+          </p>
+        }
 
         <app-admin-form-actions
           [disableSave]="saving()"

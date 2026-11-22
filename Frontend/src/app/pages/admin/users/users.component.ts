@@ -10,6 +10,7 @@ import { AdminFormActionsComponent } from "../../../components/admin/admin-form-
 import { AdminFormModalComponent } from "../../../components/admin/admin-form-modal/admin-form-modal.component";
 import { UsersService } from "../../../services/users.service";
 import { ToastService } from "../../../services/toast.service";
+import { AuthService } from "../../../services/auth.service";
 import type { User, CreateUserDto, UpdateUserDto } from "../../../models/user.model";
 import { UserRole } from "../../../models/user.model";
 
@@ -36,6 +37,7 @@ export class UsersComponent implements OnInit {
   private fb = inject(FormBuilder);
   private usersService = inject(UsersService);
   private toastService = inject(ToastService);
+  private currentUserId = inject(AuthService).getCurrentUser()?.userId ?? null;
 
   users = signal<User[]>([]);
   loading = signal(false);
@@ -48,6 +50,13 @@ export class UsersComponent implements OnInit {
   
   // Expose UserRole to template
   readonly UserRole = UserRole;
+
+  /** The API refuses to let you change your own role or deactivate/delete yourself, so the page doesn't offer it. */
+  editingSelf = computed(() => this.editingId() !== null && this.isSelf(this.editingId()));
+
+  isSelf(id: string | null | undefined): boolean {
+    return !!id && id === this.currentUserId;
+  }
 
   form = this.fb.group({
     email: ["", [Validators.required, Validators.email]],
@@ -72,9 +81,19 @@ export class UsersComponent implements OnInit {
     });
   }
 
+  /** Disabled controls are left out of form.value, so the update request keeps your current role and status. */
+  private lockOwnRoleAndStatus(locked: boolean) {
+    for (const name of ["role", "isActive"]) {
+      const control = this.form.get(name);
+      if (locked) control?.disable({ emitEvent: false });
+      else control?.enable({ emitEvent: false });
+    }
+  }
+
   startCreate() {
     this.editingId.set(null);
     this.isCreating.set(true);
+    this.lockOwnRoleAndStatus(false);
     this.form.reset({
       role: UserRole.Admin,
       isActive: true,
@@ -87,6 +106,7 @@ export class UsersComponent implements OnInit {
   startEdit(user: User) {
     this.editingId.set(user.id || null);
     this.isCreating.set(false);
+    this.lockOwnRoleAndStatus(this.isSelf(user.id));
     this.form.patchValue({
       email: user.email,
       firstName: user.firstName || "",
@@ -104,6 +124,7 @@ export class UsersComponent implements OnInit {
   cancelEdit() {
     this.editingId.set(null);
     this.isCreating.set(false);
+    this.lockOwnRoleAndStatus(false);
     this.form.reset({
       role: UserRole.Admin,
       isActive: true,

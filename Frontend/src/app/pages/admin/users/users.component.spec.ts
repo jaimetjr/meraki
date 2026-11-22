@@ -3,6 +3,7 @@ import { of } from 'rxjs';
 import { UsersComponent } from './users.component';
 import { UsersService } from '../../../services/users.service';
 import { ToastService } from '../../../services/toast.service';
+import { AuthService } from '../../../services/auth.service';
 import { UserRole, type User } from '../../../models/user.model';
 
 describe('UsersComponent (admin)', () => {
@@ -11,18 +12,22 @@ describe('UsersComponent (admin)', () => {
   let usersService: jasmine.SpyObj<UsersService>;
 
   const inactive: User = { id: 'u1', email: 'admin@meraki.com', firstName: 'Admin', lastName: 'User', role: UserRole.Admin, isActive: false };
+  const me: User = { id: 'me', email: 'superadmin@meraki.local', role: UserRole.SuperAdmin, isActive: true };
 
   beforeEach(async () => {
     usersService = jasmine.createSpyObj('UsersService', ['list', 'create', 'update', 'delete', 'updatePassword']);
-    usersService.list.and.returnValue(of([inactive]));
+    usersService.list.and.returnValue(of([inactive, me]));
     usersService.update.and.returnValue(of(void 0));
     usersService.create.and.returnValue(of(inactive));
     usersService.updatePassword.and.returnValue(of(void 0));
+    const auth = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
+    auth.getCurrentUser.and.returnValue({ userId: 'me', email: me.email, role: 'SuperAdmin', token: 't', expiresAt: '2999-01-01' });
 
     await TestBed.configureTestingModule({
       imports: [UsersComponent],
       providers: [
         { provide: UsersService, useValue: usersService },
+        { provide: AuthService, useValue: auth },
         { provide: ToastService, useValue: jasmine.createSpyObj('ToastService', ['showSuccess', 'showError', 'showWarning']) },
       ],
     }).compileComponents();
@@ -79,5 +84,48 @@ describe('UsersComponent (admin)', () => {
 
     const sent = usersService.update.calls.mostRecent().args[1];
     expect(sent.isActive).toBe(false);
+  });
+
+  function select(controlName: string) {
+    return fixture.nativeElement.querySelector(`select[formControlName=${controlName}]`) as HTMLSelectElement;
+  }
+
+  it('locks Papel and Status when you edit your own account, explains why, and sends neither', () => {
+    component.startEdit(me);
+    fixture.detectChanges();
+
+    expect(select('role').disabled).toBeTrue();
+    expect(select('isActive').disabled).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain('Você não pode alterar seu próprio papel');
+
+    component.form.patchValue({ firstName: 'Jaime' });
+    component.submit();
+    const sent = usersService.update.calls.mostRecent().args[1];
+    expect(sent.firstName).toBe('Jaime');
+    expect('role' in sent).toBeFalse();
+    expect('isActive' in sent).toBeFalse();
+  });
+
+  it('unlocks Papel and Status again when you then edit someone else or create a user', () => {
+    component.startEdit(me);
+    component.startEdit(inactive);
+    fixture.detectChanges();
+    expect(select('role').disabled).toBeFalse();
+    expect(select('isActive').disabled).toBeFalse();
+
+    component.startEdit(me);
+    component.cancelEdit();
+    component.startCreate();
+    fixture.detectChanges();
+    expect(select('role').disabled).toBeFalse();
+  });
+
+  it('disables Excluir on your own row only', () => {
+    const rows = [...fixture.nativeElement.querySelectorAll('.table-row')] as HTMLElement[];
+    const deleteButton = (email: string) =>
+      rows.find((r) => r.textContent?.includes(email))!.querySelector('.btn-danger') as HTMLButtonElement;
+
+    expect(deleteButton(me.email).disabled).toBeTrue();
+    expect(deleteButton(inactive.email).disabled).toBeFalse();
   });
 });
