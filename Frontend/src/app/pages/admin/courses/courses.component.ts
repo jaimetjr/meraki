@@ -216,10 +216,11 @@ export class CoursesComponent implements OnInit {
         const action = this.editingId() ? 'atualizado' : 'criado';
         this.toastService.showSuccess(`Curso ${action} com sucesso!`);
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.error.set("Erro ao salvar curso");
-        this.toastService.showError("Erro ao salvar curso");
+        const message = err?.userMessage || "Erro ao salvar curso";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }
@@ -246,9 +247,10 @@ export class CoursesComponent implements OnInit {
         this.loadAll();
         this.toastService.showSuccess("Curso excluído com sucesso!");
       },
-      error: () => {
-        this.error.set("Erro ao excluir curso");
-        this.toastService.showError("Erro ao excluir curso");
+      error: (err) => {
+        const message = err?.userMessage || "Erro ao excluir curso";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }

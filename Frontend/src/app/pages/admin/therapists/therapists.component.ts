@@ -169,10 +169,11 @@ export class TherapistsComponent implements OnInit {
         const action = this.editingId() ? 'atualizado' : 'criado';
         this.toastService.showSuccess(`Terapeuta ${action} com sucesso!`);
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.error.set("Erro ao salvar terapeuta");
-        this.toastService.showError("Erro ao salvar terapeuta");
+        const message = err?.userMessage || "Erro ao salvar terapeuta";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }
@@ -199,9 +200,10 @@ export class TherapistsComponent implements OnInit {
         this.loadAll();
         this.toastService.showSuccess("Terapeuta excluído com sucesso!");
       },
-      error: () => {
-        this.error.set("Erro ao excluir terapeuta");
-        this.toastService.showError("Erro ao excluir terapeuta");
+      error: (err) => {
+        const message = err?.userMessage || "Erro ao excluir terapeuta";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }

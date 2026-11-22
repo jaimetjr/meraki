@@ -71,6 +71,7 @@ export class ErrorService {
    */
   getHttpErrorMessage(status: number, defaultMessage?: string): string {
     const messages: Record<number, string> = {
+      0: 'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.',
       400: 'Requisição inválida. Por favor, verifique os dados enviados.',
       401: 'Não autorizado. Por favor, faça login novamente.',
       403: 'Acesso negado. Você não tem permissão para realizar esta ação.',

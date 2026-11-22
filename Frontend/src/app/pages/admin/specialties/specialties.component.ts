@@ -115,10 +115,11 @@ export class SpecialtiesComponent implements OnInit {
         const action = this.editingId() ? 'atualizada' : 'criada';
         this.toastService.showSuccess(`Especialidade ${action} com sucesso!`);
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.error.set("Erro ao salvar especialidade");
-        this.toastService.showError("Erro ao salvar especialidade");
+        const message = err?.userMessage || "Erro ao salvar especialidade";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }
@@ -134,9 +135,10 @@ export class SpecialtiesComponent implements OnInit {
         this.loadAll();
         this.toastService.showSuccess("Especialidade excluída com sucesso!");
       },
-      error: () => {
-        this.error.set("Erro ao excluir especialidade");
-        this.toastService.showError("Erro ao excluir especialidade");
+      error: (err) => {
+        const message = err?.userMessage || "Erro ao excluir especialidade";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }

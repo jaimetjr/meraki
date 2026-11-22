@@ -27,9 +27,34 @@ public class UsersTests(ApiFactory api)
         var client = await api.ClientAsAsync(UserRole.SuperAdmin);
         var (_, email) = await api.CreateUserAsync(UserRole.Admin);
 
-        var response = await client.PostAsJsonAsync("/api/users", new { email, password = "Another-Passw0rd!", role = "Admin" });
+        var response = await client.PostAsJsonAsync("/api/users", new { email, password = "Another-Passw0rd!", firstName = "Ana", role = "Admin" });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("Já existe um usuário com este e-mail.", await response.ProblemDetail());
+    }
+
+    [Fact]
+    public async Task A_new_user_needs_a_first_name()
+    {
+        var client = await api.ClientAsAsync(UserRole.SuperAdmin);
+
+        var response = await client.PostAsJsonAsync("/api/users",
+            new { email = $"new-{Guid.NewGuid():N}@test.local", password = "Another-Passw0rd!", firstName = " ", role = "Admin" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("'Nome' deve ser informado.", await response.ProblemDetail());
+    }
+
+    [Fact]
+    public async Task Editing_a_user_needs_a_first_name()
+    {
+        var client = await api.ClientAsAsync(UserRole.SuperAdmin);
+        var (id, email) = await api.CreateUserAsync(UserRole.Admin);
+
+        var response = await client.PutAsJsonAsync($"/api/users/{id}", new { email, lastName = "Souza" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("'Nome' deve ser informado.", await response.ProblemDetail());
     }
 
     [Fact]

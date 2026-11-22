@@ -26,12 +26,12 @@ public sealed class ContactMessage : Entity, IHoldsPersonalData
 
     public ContactMessage(string name, string email, string phone, string serviceName, string? message, DateTime consentGivenAt)
     {
-        Require(name, nameof(Name), NameMaxLength);
-        Require(email, nameof(Email), EmailMaxLength);
-        Require(phone, nameof(Phone), PhoneMaxLength);
-        Require(serviceName, nameof(ServiceName), ServiceNameMaxLength);
+        Require(name, "Nome", NameMaxLength);
+        Require(email, "E-mail", EmailMaxLength);
+        Require(phone, "Telefone", PhoneMaxLength);
+        Require(serviceName, "Serviço", ServiceNameMaxLength);
         if (message is { Length: > MessageMaxLength })
-            throw new DomainException($"Message cannot exceed {MessageMaxLength} characters");
+            throw new DomainException($"O campo Mensagem deve ter no máximo {MessageMaxLength} caracteres.");
 
         Id = Guid.NewGuid();
         Name = name;
@@ -52,8 +52,8 @@ public sealed class ContactMessage : Entity, IHoldsPersonalData
 
     private static void Require(string value, string field, int maxLength)
     {
-        if (string.IsNullOrWhiteSpace(value)) throw new DomainException($"{field} is required");
-        if (value.Length > maxLength) throw new DomainException($"{field} cannot exceed {maxLength} characters");
+        if (string.IsNullOrWhiteSpace(value)) throw new DomainException($"O campo {field} é obrigatório.");
+        if (value.Length > maxLength) throw new DomainException($"O campo {field} deve ter no máximo {maxLength} caracteres.");
     }
 }
 

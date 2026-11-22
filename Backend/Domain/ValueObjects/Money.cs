@@ -14,7 +14,7 @@ namespace Domain.ValueObjects
 
         public Money(decimal amount, string currency = "BRL")
         {
-            if (amount < 0) throw new DomainException("Amount cannot be negative");
+            if (amount < 0) throw new DomainException("O valor não pode ser negativo.");
             Amount = amount;
             Currency = currency;
         }

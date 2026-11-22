@@ -32,10 +32,10 @@ public sealed class Service : AggregateRoot, ISoftDeletable
 
     public Service(string name, string description, string? image, Money money)
     {
-        if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
-        if (string.IsNullOrWhiteSpace(description)) throw new DomainException("Description is required");
-        if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
-        if (description.Length > DescriptionMaxLength) throw new DomainException($"Description cannot exceed {DescriptionMaxLength} characters");
+        if (string.IsNullOrWhiteSpace(name)) throw new DomainException("O campo Nome é obrigatório.");
+        if (string.IsNullOrWhiteSpace(description)) throw new DomainException("O campo Descrição é obrigatório.");
+        if (name.Length > NameMaxLength) throw new DomainException($"O campo Nome deve ter no máximo {NameMaxLength} caracteres.");
+        if (description.Length > DescriptionMaxLength) throw new DomainException($"O campo Descrição deve ter no máximo {DescriptionMaxLength} caracteres.");
 
         Name = name;
         Description = description;
@@ -49,7 +49,7 @@ public sealed class Service : AggregateRoot, ISoftDeletable
     public void UpdateDetails(string? longDescription, string? duration)
     {
         if (longDescription != null && longDescription.Length > LongDescriptionMaxLength)
-            throw new DomainException($"LongDescription cannot exceed {LongDescriptionMaxLength} characters");
+            throw new DomainException($"O campo Descrição longa deve ter no máximo {LongDescriptionMaxLength} caracteres.");
         
         LongDescription = longDescription;
         Duration = duration;
@@ -75,10 +75,10 @@ public sealed class Service : AggregateRoot, ISoftDeletable
 
     public void Update(string name, string description, string? image, Money price)
     {
-        if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
-        if (string.IsNullOrWhiteSpace(description)) throw new DomainException("Description is required");
-        if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
-        if (description.Length > DescriptionMaxLength) throw new DomainException($"Description cannot exceed {DescriptionMaxLength} characters");
+        if (string.IsNullOrWhiteSpace(name)) throw new DomainException("O campo Nome é obrigatório.");
+        if (string.IsNullOrWhiteSpace(description)) throw new DomainException("O campo Descrição é obrigatório.");
+        if (name.Length > NameMaxLength) throw new DomainException($"O campo Nome deve ter no máximo {NameMaxLength} caracteres.");
+        if (description.Length > DescriptionMaxLength) throw new DomainException($"O campo Descrição deve ter no máximo {DescriptionMaxLength} caracteres.");
 
         Name = name;
         Description = description;

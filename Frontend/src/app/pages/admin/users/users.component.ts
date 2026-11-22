@@ -61,7 +61,8 @@ export class UsersComponent implements OnInit {
   form = this.fb.group({
     email: ["", [Validators.required, Validators.email]],
     password: ["", [Validators.minLength(PASSWORD_MIN_LENGTH)]],
-    firstName: [""],
+    // Required by the API too; /\S/ also rejects a name made only of spaces, as the API does.
+    firstName: ["", [Validators.required, Validators.pattern(/\S/)]],
     lastName: [""],
     role: [UserRole.Admin as UserRole, Validators.required],
     isActive: [true],
@@ -242,9 +243,10 @@ export class UsersComponent implements OnInit {
         this.loadAll();
         this.toastService.showSuccess("Usuário excluído com sucesso!");
       },
-      error: () => {
-        this.error.set("Erro ao excluir usuário");
-        this.toastService.showError("Erro ao excluir usuário");
+      error: (err) => {
+        const message = err?.userMessage || "Erro ao excluir usuário";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }

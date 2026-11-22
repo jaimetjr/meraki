@@ -39,7 +39,7 @@ public class CategoryService(AppDbContext db)
 
         var usedBy = await db.Services.CountAsync(s => s.CategoryId == id);
         if (usedBy > 0)
-            throw new ConflictException($"Category is used by {usedBy} service(s); move them to another category first.");
+            throw new ConflictException($"Esta categoria é usada por {usedBy} serviço(s). Mova-os para outra categoria antes de excluí-la.");
 
         category.Deactivate();
         await db.SaveChangesAsync();

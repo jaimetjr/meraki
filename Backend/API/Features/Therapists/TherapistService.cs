@@ -7,6 +7,9 @@ namespace API.Features.Therapists;
 
 public class TherapistService(AppDbContext db, ImageUploads images)
 {
+    private const string SpecialtyNotFound =
+        "Uma das especialidades selecionadas não existe mais. Recarregue a página e tente novamente.";
+
     private IQueryable<Therapist> Therapists => db.Therapists.Include(t => t.Specialties);
 
     public async Task<List<TherapistDto>> GetAllAsync() =>
@@ -24,7 +27,7 @@ public class TherapistService(AppDbContext db, ImageUploads images)
         images.SaveWithAsync(null, image, removeImage: false, "therapists", async imageUrl =>
         {
             var therapist = new Therapist(dto.Name, dto.Bio, imageUrl, dto.Experience, dto.Education, dto.ProId);
-            therapist.SetSpecialties(await db.Specialties.LoadAllByIdAsync(dto.Specialties?.Select(s => s.Id), "specialties"));
+            therapist.SetSpecialties(await db.Specialties.LoadAllByIdAsync(dto.Specialties?.Select(s => s.Id), SpecialtyNotFound));
 
             db.Therapists.Add(therapist);
             await db.SaveChangesAsync();
@@ -40,7 +43,7 @@ public class TherapistService(AppDbContext db, ImageUploads images)
         {
             therapist.Update(dto.Name, dto.Bio, imageUrl, dto.Experience, dto.Education, dto.ProId);
             if (dto.Specialties != null)
-                therapist.SetSpecialties(await db.Specialties.LoadAllByIdAsync(dto.Specialties.Select(s => s.Id), "specialties"));
+                therapist.SetSpecialties(await db.Specialties.LoadAllByIdAsync(dto.Specialties.Select(s => s.Id), SpecialtyNotFound));
 
             await db.SaveChangesAsync();
             return true;

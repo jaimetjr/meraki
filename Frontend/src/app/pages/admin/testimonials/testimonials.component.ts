@@ -125,10 +125,11 @@ export class TestimonialsComponent implements OnInit {
         const action = this.editingId() ? 'atualizado' : 'criado';
         this.toastService.showSuccess(`Depoimento ${action} com sucesso!`);
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.error.set("Erro ao salvar depoimento");
-        this.toastService.showError("Erro ao salvar depoimento");
+        const message = err?.userMessage || "Erro ao salvar depoimento";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }
@@ -155,9 +156,10 @@ export class TestimonialsComponent implements OnInit {
         this.loadAll();
         this.toastService.showSuccess("Depoimento excluído com sucesso!");
       },
-      error: () => {
-        this.error.set("Erro ao excluir depoimento");
-        this.toastService.showError("Erro ao excluir depoimento");
+      error: (err) => {
+        const message = err?.userMessage || "Erro ao excluir depoimento";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }

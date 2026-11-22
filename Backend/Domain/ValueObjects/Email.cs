@@ -10,7 +10,7 @@ namespace Domain.ValueObjects
         public Email(string value)
         {
             if (!Regex.IsMatch(value, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-                throw new DomainException("Invalid email format");
+                throw new DomainException("Formato de e-mail inválido.");
 
             Value = value;
         }

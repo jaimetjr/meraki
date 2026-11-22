@@ -29,6 +29,15 @@ public static class Http
         return JsonDocument.Parse(text).RootElement.Clone();
     }
 
+    /// <summary>The <c>detail</c> of an error response: the sentence the admin shows to the user.</summary>
+    public static async Task<string?> ProblemDetail(this HttpResponseMessage response)
+    {
+        var text = await response.Content.ReadAsStringAsync();
+        if (response.IsSuccessStatusCode)
+            throw new InvalidOperationException($"Expected an error but got {(int)response.StatusCode}: {text}");
+        return JsonDocument.Parse(text).RootElement.TryGetProperty("detail", out var detail) ? detail.GetString() : null;
+    }
+
     public static async Task<JsonElement> GetJson(this HttpClient client, string url) =>
         await (await client.GetAsync(url)).Json();
 

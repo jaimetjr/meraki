@@ -75,14 +75,15 @@ Three projects: `Domain` ← `Infrastructure` ← `API` (+ `API.Tests`).
 **Adding a feature:**
 1. Domain: add the entity, with its length constants.
 2. Infrastructure: add an `IEntityTypeConfiguration`, a `DbSet`, and a query filter if it soft-deletes.
-3. API: add the feature folder.
+3. API: add the feature folder. Give every newly validated property a label in `API/Common/FieldLabels.cs`; `FieldLabelTests` fails without one.
 4. Register the service: one line in `ServiceRegistration`.
 5. Add a migration.
 6. Add tests in `API.Tests`.
 
 Cross-cutting rules:
 - **Errors:** `ApiExceptionHandler` maps `DomainException` → 400, `ConflictException` → 409 and `AuthenticationFailedException` → 401, and anything else to a generic 500 that never exposes exception text. Don't map `UnauthorizedAccessException`: .NET also throws it for file-permission errors, and a 401 makes the frontend log the user out. All errors are ProblemDetails. Throw these exceptions from services; never write try/catch in controllers.
-- **Validation:** `ValidationFilter` runs the `IValidator<T>` for every action argument automatically. Validators are discovered from the API assembly.
+- **Error messages are pt-BR and shown as they are.** The admin's `errorInterceptor` puts a 4xx response's `detail` in `userMessage`, and pages display it in their toast. So write `DomainException`/`ConflictException` messages as sentences for the clinic staff, never with ids or C# names; domain guards use "O campo X …". Responses with no `detail` (model-binding errors, 5xx, network) get the frontend's generic text for their status.
+- **Validation:** `ValidationFilter` runs the `IValidator<T>` for every action argument automatically and joins the messages into `detail`. Validators are discovered from the API assembly. `FieldLabels.UseForValidationMessages()` switches FluentValidation to pt-BR and names fields by their form label ("'Nome' deve ser informado.").
 - **Multipart + JSON fields:** content endpoints take `[FromForm]` DTOs. Nested lists arrive as JSON strings in a form field (`category`, `benefits`, `specialties`) and are bound by `[ModelBinder(typeof(FormJsonModelBinder), Name = "...")]` plus `[ValidateNever]`. Only their ids are used, loaded with `QueryableExtensions.LoadAllByIdAsync`, which rejects unknown or soft-deleted ids with a 400.
 - **Relations are replaced, not merged:** `Therapist.SetSpecialties` and `Service.SetBenefits`. A null list on update keeps the current set; `[]` clears it.
 - **Soft delete:** EF global query filters (`IsActive`) on all content entities in `AppDbContext`. **Users are not filtered**: inactive users stay listed, DELETE deactivates, nobody can deactivate themselves or change their own role, and inactive users can't log in. Deleting a category still used by a service → 409.

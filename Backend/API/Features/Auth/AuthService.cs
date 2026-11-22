@@ -17,7 +17,7 @@ public class AuthService(AppDbContext db, IConfiguration configuration)
         var email = login.Email.ToLowerInvariant();
         var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
         if (user == null || !BCrypt.Net.BCrypt.Verify(login.Password, user.PasswordHash))
-            throw new AuthenticationFailedException("Invalid email or password");
+            throw new AuthenticationFailedException("E-mail ou senha inválidos.");
 
         var expiresAt = DateTime.UtcNow.AddMinutes(ExpirationMinutes);
         return new AuthResponseDto

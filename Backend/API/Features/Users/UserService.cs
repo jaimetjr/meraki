@@ -45,7 +45,7 @@ public class UserService(AppDbContext db, ICurrentUser currentUser)
         if (dto.Role.HasValue && dto.Role.Value != user.Role)
         {
             if (user.Id == currentUser.UserId)
-                throw new DomainException("You cannot change your own role.");
+                throw new DomainException("Você não pode alterar seu próprio papel.");
             user.UpdateRole(dto.Role.Value);
         }
 
@@ -80,7 +80,7 @@ public class UserService(AppDbContext db, ICurrentUser currentUser)
     private void Deactivate(User user)
     {
         if (user.Id == currentUser.UserId)
-            throw new DomainException("You cannot deactivate your own account.");
+            throw new DomainException("Você não pode desativar sua própria conta.");
         user.Deactivate();
     }
 
@@ -89,6 +89,6 @@ public class UserService(AppDbContext db, ICurrentUser currentUser)
     {
         var normalized = email.ToLowerInvariant();
         if (await db.Users.AnyAsync(u => u.Email == normalized && u.Id != exceptUserId))
-            throw new ConflictException("Email already exists");
+            throw new ConflictException("Já existe um usuário com este e-mail.");
     }
 }

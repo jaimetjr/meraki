@@ -101,6 +101,9 @@ public class RelationsTests(ApiFactory api)
         var response = await client.DeleteAsync($"/api/categories/{categoryId}");
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal(
+            "Esta categoria é usada por 1 serviço(s). Mova-os para outra categoria antes de excluí-la.",
+            await response.ProblemDetail());
         Assert.Equal(HttpStatusCode.OK, (await api.CreateClient().GetAsync($"/api/categories/{categoryId}")).StatusCode);
     }
 }

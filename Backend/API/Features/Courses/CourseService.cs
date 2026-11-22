@@ -19,7 +19,7 @@ public class CourseService(AppDbContext db, ImageUploads images)
     public async Task<List<CourseDto>> GetByStatusAsync(string status)
     {
         if (!Enum.TryParse<CourseStatus>(status, ignoreCase: true, out var parsed))
-            throw new DomainException($"Invalid course status: {status}");
+            throw new DomainException($"Status de curso inválido: {status}.");
 
         return (await db.Courses.AsNoTracking().Where(c => c.Status == parsed).ToListAsync()).ConvertAll(c => c.ToDto());
     }

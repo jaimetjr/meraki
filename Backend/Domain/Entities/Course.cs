@@ -35,11 +35,11 @@ namespace Domain.Entities
 
         public Course(string title, string description, string? image, string instructor, CourseType type, CourseStatus status)
         {
-            if (string.IsNullOrWhiteSpace(title)) throw new DomainException("Title is required");
-            if (string.IsNullOrWhiteSpace(description)) throw new DomainException("Description is required");
-            if (string.IsNullOrWhiteSpace(instructor)) throw new DomainException("Instructor is required");
-            if (title.Length > TitleMaxLength) throw new DomainException($"Title cannot exceed {TitleMaxLength} characters");
-            if (description.Length > DescriptionMaxLength) throw new DomainException($"Description cannot exceed {DescriptionMaxLength} characters");
+            if (string.IsNullOrWhiteSpace(title)) throw new DomainException("O campo Título é obrigatório.");
+            if (string.IsNullOrWhiteSpace(description)) throw new DomainException("O campo Descrição é obrigatório.");
+            if (string.IsNullOrWhiteSpace(instructor)) throw new DomainException("O campo Instrutor é obrigatório.");
+            if (title.Length > TitleMaxLength) throw new DomainException($"O campo Título deve ter no máximo {TitleMaxLength} caracteres.");
+            if (description.Length > DescriptionMaxLength) throw new DomainException($"O campo Descrição deve ter no máximo {DescriptionMaxLength} caracteres.");
 
             Title = title;
             Description = description;
@@ -88,13 +88,13 @@ namespace Domain.Entities
                 }
 
                 if (utcEndDate < utcStartDate)
-                    throw new DomainException("EndDate cannot be before StartDate");
+                    throw new DomainException("A data de término não pode ser anterior à data de início.");
             }
             
             // A past start date is only rejected when it is being set or changed, so courses that
             // already started remain editable.
             if (utcStartDate != StartDate && utcStartDate < DateTime.UtcNow)
-                throw new DomainException("StartDate cannot be in the past");
+                throw new DomainException("A data de início não pode estar no passado.");
             if (price == null) throw new ArgumentNullException(nameof(price));
 
             StartDate = utcStartDate;
@@ -107,11 +107,11 @@ namespace Domain.Entities
 
         public void Update(string title, string description, string? image, string instructor, CourseType type, CourseStatus status)
         {
-            if (string.IsNullOrWhiteSpace(title)) throw new DomainException("Title is required");
-            if (string.IsNullOrWhiteSpace(description)) throw new DomainException("Description is required");
-            if (string.IsNullOrWhiteSpace(instructor)) throw new DomainException("Instructor is required");
-            if (title.Length > TitleMaxLength) throw new DomainException($"Title cannot exceed {TitleMaxLength} characters");
-            if (description.Length > DescriptionMaxLength) throw new DomainException($"Description cannot exceed {DescriptionMaxLength} characters");
+            if (string.IsNullOrWhiteSpace(title)) throw new DomainException("O campo Título é obrigatório.");
+            if (string.IsNullOrWhiteSpace(description)) throw new DomainException("O campo Descrição é obrigatório.");
+            if (string.IsNullOrWhiteSpace(instructor)) throw new DomainException("O campo Instrutor é obrigatório.");
+            if (title.Length > TitleMaxLength) throw new DomainException($"O campo Título deve ter no máximo {TitleMaxLength} caracteres.");
+            if (description.Length > DescriptionMaxLength) throw new DomainException($"O campo Descrição deve ter no máximo {DescriptionMaxLength} caracteres.");
 
             Title = title;
             Description = description;

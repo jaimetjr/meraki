@@ -28,12 +28,12 @@ namespace Domain.Entities
 
         public Therapist(string name, string bio, string? image, string experience, string education, string? proId = null)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
-            if (string.IsNullOrWhiteSpace(bio)) throw new DomainException("Bio is required");
-            if (string.IsNullOrWhiteSpace(experience)) throw new DomainException("Experience is required");
-            if (string.IsNullOrWhiteSpace(education)) throw new DomainException("Education is required");
-            if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
-            if (bio.Length > BioMaxLength) throw new DomainException($"Bio cannot exceed {BioMaxLength} characters");
+            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("O campo Nome é obrigatório.");
+            if (string.IsNullOrWhiteSpace(bio)) throw new DomainException("O campo Bio é obrigatório.");
+            if (string.IsNullOrWhiteSpace(experience)) throw new DomainException("O campo Experiência é obrigatório.");
+            if (string.IsNullOrWhiteSpace(education)) throw new DomainException("O campo Formação é obrigatório.");
+            if (name.Length > NameMaxLength) throw new DomainException($"O campo Nome deve ter no máximo {NameMaxLength} caracteres.");
+            if (bio.Length > BioMaxLength) throw new DomainException($"O campo Bio deve ter no máximo {BioMaxLength} caracteres.");
 
             Name = name;
             Bio = bio;
@@ -57,12 +57,12 @@ namespace Domain.Entities
 
         public void Update(string name, string bio, string? image, string experience, string education, string? proId = null)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
-            if (string.IsNullOrWhiteSpace(bio)) throw new DomainException("Bio is required");
-            if (string.IsNullOrWhiteSpace(experience)) throw new DomainException("Experience is required");
-            if (string.IsNullOrWhiteSpace(education)) throw new DomainException("Education is required");
-            if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
-            if (bio.Length > BioMaxLength) throw new DomainException($"Bio cannot exceed {BioMaxLength} characters");
+            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("O campo Nome é obrigatório.");
+            if (string.IsNullOrWhiteSpace(bio)) throw new DomainException("O campo Bio é obrigatório.");
+            if (string.IsNullOrWhiteSpace(experience)) throw new DomainException("O campo Experiência é obrigatório.");
+            if (string.IsNullOrWhiteSpace(education)) throw new DomainException("O campo Formação é obrigatório.");
+            if (name.Length > NameMaxLength) throw new DomainException($"O campo Nome deve ter no máximo {NameMaxLength} caracteres.");
+            if (bio.Length > BioMaxLength) throw new DomainException($"O campo Bio deve ter no máximo {BioMaxLength} caracteres.");
 
             Name = name;
             Bio = bio;

@@ -142,6 +142,7 @@ public class ImageTests(ApiFactory api)
         var response = await client.PostAsync(resource.Url, WithFile(resource.Form(), Png, fileName, contentType));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("Apenas imagens JPG, PNG ou WEBP são aceitas.", await response.ProblemDetail());
     }
 
     [Fact]
@@ -154,6 +155,7 @@ public class ImageTests(ApiFactory api)
             WithFile(resource.Form(), "<html><script>alert(1)</script></html>"u8.ToArray(), "photo.png"));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("O arquivo enviado não é uma imagem válida.", await response.ProblemDetail());
     }
 
     [Fact]
@@ -167,6 +169,7 @@ public class ImageTests(ApiFactory api)
         var response = await client.PostAsync(resource.Url, WithFile(resource.Form(), big, "big.png"));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("A imagem deve ter no máximo 5 MB.", await response.ProblemDetail());
     }
 
     [Fact]

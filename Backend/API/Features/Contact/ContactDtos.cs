@@ -67,6 +67,6 @@ public class ContactRequestValidator : AbstractValidator<ContactRequestDto>
         RuleFor(x => x.Phone).NotEmpty().MaximumLength(ContactMessage.PhoneMaxLength);
         RuleFor(x => x.Service).NotEmpty().MaximumLength(ContactMessage.ServiceNameMaxLength);
         RuleFor(x => x.Message).MaximumLength(ContactMessage.MessageMaxLength);
-        RuleFor(x => x.Consent).Equal(true).WithMessage("Consent to store the contact data is required.");
+        RuleFor(x => x.Consent).Equal(true).WithMessage("É necessário autorizar o armazenamento dos seus dados de contato.");
     }
 }

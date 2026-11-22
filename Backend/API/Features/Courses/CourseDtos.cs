@@ -58,6 +58,6 @@ public class CourseValidator : AbstractValidator<CourseDto>
         RuleFor(x => x.EndDate)
             .GreaterThanOrEqualTo(x => x.StartDate)
             .When(x => x.StartDate.HasValue && x.EndDate.HasValue)
-            .WithMessage("EndDate cannot be before StartDate");
+            .WithMessage("A data de término não pode ser anterior à data de início.");
     }
 }

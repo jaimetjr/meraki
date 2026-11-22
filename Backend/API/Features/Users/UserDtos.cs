@@ -58,7 +58,8 @@ public class CreateUserValidator : AbstractValidator<CreateUserDto>
     {
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(User.EmailMaxLength);
         RuleFor(x => x.Password).NotEmpty().MinimumLength(PasswordMinLength);
-        RuleFor(x => x.FirstName).MaximumLength(User.NameMaxLength);
+        // Required so the user list shows who each account belongs to (the seeded SuperAdmin gets one on its first edit).
+        RuleFor(x => x.FirstName).NotEmpty().MaximumLength(User.NameMaxLength);
         RuleFor(x => x.LastName).MaximumLength(User.NameMaxLength);
         RuleFor(x => x.Role).IsInEnum();
     }
@@ -69,7 +70,8 @@ public class UpdateUserValidator : AbstractValidator<UpdateUserDto>
     public UpdateUserValidator()
     {
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(User.EmailMaxLength);
-        RuleFor(x => x.FirstName).MaximumLength(User.NameMaxLength);
+        // Required so the user list shows who each account belongs to (the seeded SuperAdmin gets one on its first edit).
+        RuleFor(x => x.FirstName).NotEmpty().MaximumLength(User.NameMaxLength);
         RuleFor(x => x.LastName).MaximumLength(User.NameMaxLength);
         RuleFor(x => x.Role).IsInEnum().When(x => x.Role.HasValue);
     }

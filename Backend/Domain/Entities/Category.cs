@@ -20,8 +20,8 @@ namespace Domain.Entities
 
         public Category(string name)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
-            if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
+            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("O campo Nome é obrigatório.");
+            if (name.Length > NameMaxLength) throw new DomainException($"O campo Nome deve ter no máximo {NameMaxLength} caracteres.");
 
             Name = name;
             IsActive = true;
@@ -31,8 +31,8 @@ namespace Domain.Entities
 
         public void Update(string name)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
-            if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
+            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("O campo Nome é obrigatório.");
+            if (name.Length > NameMaxLength) throw new DomainException($"O campo Nome deve ter no máximo {NameMaxLength} caracteres.");
 
             Name = name;
             MarkAsModified();

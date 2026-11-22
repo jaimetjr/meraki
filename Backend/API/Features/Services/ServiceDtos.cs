@@ -59,6 +59,6 @@ public class ServiceValidator : AbstractValidator<ServiceDto>
         RuleFor(x => x.Duration).MaximumLength(Service.DurationMaxLength);
         RuleFor(x => x.Price).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Currency).NotEmpty().Length(3);
-        RuleFor(x => x.Category).NotNull().WithMessage("Category is required.");
+        RuleFor(x => x.Category).NotNull().WithMessage("'Categoria' deve ser informada.");
     }
 }

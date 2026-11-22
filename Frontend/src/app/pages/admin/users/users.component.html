@@ -102,11 +102,16 @@
           }
         </label>
         <label>
-          <span>Nome</span>
-          <input 
+          <span>Nome*</span>
+          <input
             formControlName="firstName"
             [class.border-red-500]="form.get('firstName')?.invalid && form.get('firstName')?.touched"
           />
+          @if (form.get('firstName')?.invalid && form.get('firstName')?.touched) {
+            <p class="text-sm text-red-600">
+              Nome é obrigatório.
+            </p>
+          }
         </label>
         <label>
           <span>Sobrenome</span>

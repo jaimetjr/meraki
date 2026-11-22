@@ -18,7 +18,7 @@ public sealed class ApiExceptionHandler(IProblemDetailsService problemDetails, I
             DomainException e => (StatusCodes.Status400BadRequest, "Invalid request", e.Message),
             ConflictException e => (StatusCodes.Status409Conflict, "Conflict", e.Message),
             AuthenticationFailedException e => (StatusCodes.Status401Unauthorized, "Unauthorized", e.Message),
-            _ => (StatusCodes.Status500InternalServerError, "Unexpected error", "An unexpected error occurred."),
+            _ => (StatusCodes.Status500InternalServerError, "Unexpected error", "Ocorreu um erro inesperado. Tente novamente mais tarde."),
         };
 
         if (status == StatusCodes.Status500InternalServerError)

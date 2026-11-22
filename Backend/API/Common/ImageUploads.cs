@@ -81,9 +81,9 @@ public sealed class ImageUploads(IFileStorage storage, ILogger<ImageUploads> log
     {
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (!ContentTypes.TryGetValue(extension, out var contentType))
-            throw new DomainException("Only JPG, PNG or WEBP images are accepted.");
+            throw new DomainException("Apenas imagens JPG, PNG ou WEBP são aceitas.");
         if (file.Length > MaxBytes)
-            throw new DomainException("Images must be 5 MB or smaller.");
+            throw new DomainException("A imagem deve ter no máximo 5 MB.");
 
         var header = new byte[12];
         int read;
@@ -92,7 +92,7 @@ public sealed class ImageUploads(IFileStorage storage, ILogger<ImageUploads> log
             read = await probe.ReadAtLeastAsync(header, header.Length, throwOnEndOfStream: false);
         }
         if (!HasImageSignature(extension, header.AsSpan(0, read)))
-            throw new DomainException("The uploaded file is not a valid image.");
+            throw new DomainException("O arquivo enviado não é uma imagem válida.");
 
         await using var content = file.OpenReadStream();
         return await storage.SaveAsync(content, extension, contentType, folder);

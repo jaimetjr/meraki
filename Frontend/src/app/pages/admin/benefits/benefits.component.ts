@@ -115,10 +115,11 @@ export class BenefitsComponent implements OnInit {
         const action = this.editingId() ? 'atualizado' : 'criado';
         this.toastService.showSuccess(`Benefício ${action} com sucesso!`);
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.error.set("Erro ao salvar benefício");
-        this.toastService.showError("Erro ao salvar benefício");
+        const message = err?.userMessage || "Erro ao salvar benefício";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }
@@ -134,9 +135,10 @@ export class BenefitsComponent implements OnInit {
         this.loadAll();
         this.toastService.showSuccess("Benefício excluído com sucesso!");
       },
-      error: () => {
-        this.error.set("Erro ao excluir benefício");
-        this.toastService.showError("Erro ao excluir benefício");
+      error: (err) => {
+        const message = err?.userMessage || "Erro ao excluir benefício";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }

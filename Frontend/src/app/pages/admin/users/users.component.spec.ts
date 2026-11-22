@@ -65,6 +65,25 @@ describe('UsersComponent (admin)', () => {
     expect(usersService.create).not.toHaveBeenCalled();
   });
 
+  it('requires Nome when creating a user', () => {
+    component.startCreate();
+    component.form.patchValue({ email: 'nova@meraki.com', password: 'abcd1234', firstName: '  ' });
+
+    component.submit();
+
+    expect(usersService.create).not.toHaveBeenCalled();
+  });
+
+  it('requires Nome when editing a user who has none yet', () => {
+    component.startEdit(me);
+
+    component.submit();
+
+    expect(usersService.update).not.toHaveBeenCalled();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Nome é obrigatório.');
+  });
+
   it('refuses a 7-character new password when editing a user (the API requires 8)', () => {
     component.startEdit(inactive);
     component.form.patchValue({ password: 'abc1234' });

@@ -14,7 +14,7 @@ public class UserLifecycleTests(ApiFactory api)
         var client = await api.ClientAsAsync(UserRole.SuperAdmin);
         var (id, email) = await api.CreateUserAsync(UserRole.Admin);
 
-        var deactivate = await client.PutAsJsonAsync($"/api/users/{id}", new { email, isActive = false });
+        var deactivate = await client.PutAsJsonAsync($"/api/users/{id}", new { email, firstName = "Ana", isActive = false });
 
         Assert.Equal(HttpStatusCode.NoContent, deactivate.StatusCode);
         var listed = (await client.GetJson("/api/users")).EnumerateArray().Single(u => u.Id() == id);
@@ -22,7 +22,7 @@ public class UserLifecycleTests(ApiFactory api)
         var blocked = await api.CreateClient().PostAsJsonAsync("/api/auth/login", new { email, password = ApiFactory.Password });
         Assert.Equal(HttpStatusCode.Unauthorized, blocked.StatusCode);
 
-        var reactivate = await client.PutAsJsonAsync($"/api/users/{id}", new { email, isActive = true });
+        var reactivate = await client.PutAsJsonAsync($"/api/users/{id}", new { email, firstName = "Ana", isActive = true });
 
         Assert.Equal(HttpStatusCode.NoContent, reactivate.StatusCode);
         Assert.False(string.IsNullOrWhiteSpace(await api.LoginAsync(email, ApiFactory.Password)));
@@ -48,10 +48,11 @@ public class UserLifecycleTests(ApiFactory api)
         var self = api.ClientWithToken(await api.LoginAsync(email, ApiFactory.Password));
 
         var delete = await self.DeleteAsync($"/api/users/{id}");
-        var update = await self.PutAsJsonAsync($"/api/users/{id}", new { email, isActive = false });
+        var update = await self.PutAsJsonAsync($"/api/users/{id}", new { email, firstName = "Ana", isActive = false });
 
         Assert.Equal(HttpStatusCode.BadRequest, delete.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, update.StatusCode);
+        Assert.Equal("Você não pode desativar sua própria conta.", await update.ProblemDetail());
         Assert.False(string.IsNullOrWhiteSpace(await api.LoginAsync(email, ApiFactory.Password)));
     }
 
@@ -61,9 +62,10 @@ public class UserLifecycleTests(ApiFactory api)
         var (id, email) = await api.CreateUserAsync(UserRole.SuperAdmin);
         var self = api.ClientWithToken(await api.LoginAsync(email, ApiFactory.Password));
 
-        var response = await self.PutAsJsonAsync($"/api/users/{id}", new { email, role = "Admin" });
+        var response = await self.PutAsJsonAsync($"/api/users/{id}", new { email, firstName = "Ana", role = "Admin" });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("Você não pode alterar seu próprio papel.", await response.ProblemDetail());
         var stored = await self.GetJson($"/api/users/{id}");
         Assert.Equal("SuperAdmin", stored.GetProperty("role").GetString());
     }
@@ -85,7 +87,7 @@ public class UserLifecycleTests(ApiFactory api)
         var client = await api.ClientAsAsync(UserRole.SuperAdmin);
         var (_, email) = await api.CreateUserAsync(UserRole.Admin, active: false);
 
-        var response = await client.PostAsJsonAsync("/api/users", new { email, password = "Another-Passw0rd!", role = "Admin" });
+        var response = await client.PostAsJsonAsync("/api/users", new { email, password = "Another-Passw0rd!", firstName = "Ana", role = "Admin" });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }

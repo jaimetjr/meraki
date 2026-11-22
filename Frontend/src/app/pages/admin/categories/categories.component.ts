@@ -96,10 +96,11 @@ export class CategoriesComponent implements OnInit {
         const action = this.editingId() ? 'atualizada' : 'criada';
         this.toastService.showSuccess(`Categoria ${action} com sucesso!`);
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.error.set("Erro ao salvar categoria");
-        this.toastService.showError("Erro ao salvar categoria");
+        const message = err?.userMessage || "Erro ao salvar categoria";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }
@@ -115,9 +116,10 @@ export class CategoriesComponent implements OnInit {
         this.loadAll();
         this.toastService.showSuccess("Categoria excluída com sucesso!");
       },
-      error: () => {
-        this.error.set("Erro ao excluir categoria");
-        this.toastService.showError("Erro ao excluir categoria");
+      error: (err) => {
+        const message = err?.userMessage || "Erro ao excluir categoria";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }

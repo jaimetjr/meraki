@@ -40,6 +40,18 @@ public class ErrorHandlingTests(ApiFactory api)
     }
 
     [Fact]
+    public async Task Validation_errors_explain_the_problem_in_portuguese_using_the_form_field_name()
+    {
+        var client = await api.ClientAsAsync(UserRole.Admin);
+
+        var response = await client.PostAsJsonAsync("/api/categories", new { name = "" });
+
+        // The admin shows "detail" as it is, so it must be a sentence the clinic staff understands.
+        var problem = await AssertProblem(response, HttpStatusCode.BadRequest);
+        Assert.Equal("'Nome' deve ser informado.", problem.GetProperty("detail").GetString());
+    }
+
+    [Fact]
     public async Task Text_longer_than_its_database_column_is_a_400_not_a_crash()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
@@ -65,7 +77,7 @@ public class ErrorHandlingTests(ApiFactory api)
             ("StartDate", "2020-01-01T10:00:00Z"), ("Modality", "Online"), ("Price", "10"), ("Currency", "BRL")));
 
         var problem = await AssertProblem(response, HttpStatusCode.BadRequest);
-        Assert.Contains("past", problem.GetProperty("detail").GetString());
+        Assert.Equal("A data de início não pode estar no passado.", problem.GetProperty("detail").GetString());
     }
 
     [Fact]
@@ -147,7 +159,7 @@ public class ErrorHandlingTests(ApiFactory api)
         var client = await api.ClientAsAsync(UserRole.SuperAdmin);
 
         var response = await client.PostAsJsonAsync("/api/users",
-            new { email = $"x-{Guid.NewGuid():N}@test.local", password = "", role = "Admin" });
+            new { email = $"x-{Guid.NewGuid():N}@test.local", password = "", firstName = "Ana", role = "Admin" });
 
         var problem = await AssertProblem(response, HttpStatusCode.BadRequest);
         Assert.Contains("password", ErrorKeys(problem));
@@ -159,7 +171,7 @@ public class ErrorHandlingTests(ApiFactory api)
         var client = await api.ClientAsAsync(UserRole.SuperAdmin);
 
         var response = await client.PostAsJsonAsync("/api/users",
-            new { email = "not-an-email", password = "Valid-Passw0rd!", role = "Admin" });
+            new { email = "not-an-email", password = "Valid-Passw0rd!", firstName = "Ana", role = "Admin" });
 
         var problem = await AssertProblem(response, HttpStatusCode.BadRequest);
         Assert.Contains("email", ErrorKeys(problem));
@@ -171,6 +183,7 @@ public class ErrorHandlingTests(ApiFactory api)
         var response = await api.CreateClient().PostAsJsonAsync("/api/auth/login",
             new { email = "nobody@test.local", password = "whatever-123" });
 
-        await AssertProblem(response, HttpStatusCode.Unauthorized);
+        var problem = await AssertProblem(response, HttpStatusCode.Unauthorized);
+        Assert.Equal("E-mail ou senha inválidos.", problem.GetProperty("detail").GetString());
     }
 }

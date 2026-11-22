@@ -190,10 +190,11 @@ export class ServicesComponent implements OnInit {
         const action = this.editingId() ? 'atualizado' : 'criado';
         this.toastService.showSuccess(`Serviço ${action} com sucesso!`);
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.error.set("Erro ao salvar serviço");
-        this.toastService.showError("Erro ao salvar serviço");
+        const message = err?.userMessage || "Erro ao salvar serviço";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }
@@ -220,9 +221,10 @@ export class ServicesComponent implements OnInit {
         this.loadAll();
         this.toastService.showSuccess("Serviço excluído com sucesso!");
       },
-      error: () => {
-        this.error.set("Erro ao excluir serviço");
-        this.toastService.showError("Erro ao excluir serviço");
+      error: (err) => {
+        const message = err?.userMessage || "Erro ao excluir serviço";
+        this.error.set(message);
+        this.toastService.showError(message);
       },
     });
   }

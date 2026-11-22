@@ -8,9 +8,10 @@ public static class QueryableExtensions
 {
     /// <summary>
     /// Loads every entity with the given ids. Any id that does not exist (or is soft-deleted,
-    /// thanks to the global query filters) is a client error, reported with the missing ids.
+    /// thanks to the global query filters) is a client error, answered with <paramref name="notFoundMessage"/>
+    /// (shown to the admin as it is; the ids themselves mean nothing to them).
     /// </summary>
-    public static async Task<List<T>> LoadAllByIdAsync<T>(this IQueryable<T> source, IEnumerable<Guid>? ids, string label)
+    public static async Task<List<T>> LoadAllByIdAsync<T>(this IQueryable<T> source, IEnumerable<Guid>? ids, string notFoundMessage)
         where T : Entity
     {
         var wanted = (ids ?? []).Distinct().ToList();
@@ -19,7 +20,7 @@ public static class QueryableExtensions
         var found = await source.Where(e => wanted.Contains(e.Id)).ToListAsync();
         var missing = wanted.Except(found.Select(e => e.Id)).ToList();
         if (missing.Count > 0)
-            throw new DomainException($"Unknown or deleted {label}: {string.Join(", ", missing)}");
+            throw new DomainException(notFoundMessage);
 
         return found;
     }

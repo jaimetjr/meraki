@@ -15,7 +15,7 @@ namespace Domain.ValueObjects
         public PhoneNumber(string value)
         {
             if (!Regex.IsMatch(value, @"^\+?[0-9]{7,15}$"))
-                throw new DomainException("Invalid phone number");
+                throw new DomainException("Número de telefone inválido.");
 
             Value = value;
         }

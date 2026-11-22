@@ -10,6 +10,9 @@ namespace API.Features.Services;
 /// <summary>Manages the services the clinic offers (the <see cref="Service"/> entity).</summary>
 public class ClinicServicesService(AppDbContext db, ImageUploads images)
 {
+    private const string BenefitNotFound =
+        "Um dos benefícios selecionados não existe mais. Recarregue a página e tente novamente.";
+
     private IQueryable<Service> Services => db.Services.Include(s => s.Category).Include(s => s.Benefits);
 
     public async Task<List<ServiceDto>> GetAllAsync() =>
@@ -30,7 +33,7 @@ public class ClinicServicesService(AppDbContext db, ImageUploads images)
             if (!string.IsNullOrWhiteSpace(dto.LongDescription) || !string.IsNullOrWhiteSpace(dto.Duration))
                 service.UpdateDetails(dto.LongDescription, dto.Duration);
             service.UpdateCategory(await LoadCategoryAsync(dto.Category));
-            service.SetBenefits(await db.Benefits.LoadAllByIdAsync(dto.Benefits?.Select(b => b.Id), "benefits"));
+            service.SetBenefits(await db.Benefits.LoadAllByIdAsync(dto.Benefits?.Select(b => b.Id), BenefitNotFound));
 
             db.Services.Add(service);
             await db.SaveChangesAsync();
@@ -49,7 +52,7 @@ public class ClinicServicesService(AppDbContext db, ImageUploads images)
             if (dto.Category != null)
                 service.UpdateCategory(await LoadCategoryAsync(dto.Category));
             if (dto.Benefits != null)
-                service.SetBenefits(await db.Benefits.LoadAllByIdAsync(dto.Benefits.Select(b => b.Id), "benefits"));
+                service.SetBenefits(await db.Benefits.LoadAllByIdAsync(dto.Benefits.Select(b => b.Id), BenefitNotFound));
 
             await db.SaveChangesAsync();
             return true;
@@ -67,5 +70,5 @@ public class ClinicServicesService(AppDbContext db, ImageUploads images)
     }
 
     private async Task<Category> LoadCategoryAsync(CategoryDto? category) =>
-        (await db.Categories.LoadAllByIdAsync([category?.Id ?? Guid.Empty], "category")).Single();
+        (await db.Categories.LoadAllByIdAsync([category?.Id ?? Guid.Empty], "A categoria selecionada não existe mais. Recarregue a página e tente novamente.")).Single();
 }

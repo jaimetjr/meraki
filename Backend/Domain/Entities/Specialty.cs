@@ -22,9 +22,9 @@ namespace Domain.Entities
 
         public Specialty(string name, string? description = null)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
-            if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
-            if (description != null && description.Length > DescriptionMaxLength) throw new DomainException($"Description cannot exceed {DescriptionMaxLength} characters");
+            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("O campo Nome é obrigatório.");
+            if (name.Length > NameMaxLength) throw new DomainException($"O campo Nome deve ter no máximo {NameMaxLength} caracteres.");
+            if (description != null && description.Length > DescriptionMaxLength) throw new DomainException($"O campo Descrição deve ter no máximo {DescriptionMaxLength} caracteres.");
 
             Name = name;
             Description = description;
@@ -35,9 +35,9 @@ namespace Domain.Entities
 
         public void Update(string name, string? description = null)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("Name is required");
-            if (name.Length > NameMaxLength) throw new DomainException($"Name cannot exceed {NameMaxLength} characters");
-            if (description != null && description.Length > DescriptionMaxLength) throw new DomainException($"Description cannot exceed {DescriptionMaxLength} characters");
+            if (string.IsNullOrWhiteSpace(name)) throw new DomainException("O campo Nome é obrigatório.");
+            if (name.Length > NameMaxLength) throw new DomainException($"O campo Nome deve ter no máximo {NameMaxLength} caracteres.");
+            if (description != null && description.Length > DescriptionMaxLength) throw new DomainException($"O campo Descrição deve ter no máximo {DescriptionMaxLength} caracteres.");
 
             Name = name;
             Description = description;

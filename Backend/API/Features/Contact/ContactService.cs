@@ -21,7 +21,7 @@ public class ContactService(
     public async Task SubmitAsync(ContactRequestDto dto, string? remoteIp)
     {
         if (!await captcha.VerifyAsync(dto.CaptchaToken, remoteIp))
-            throw new DomainException("CAPTCHA verification failed. Please try again.");
+            throw new DomainException("Não foi possível verificar o CAPTCHA. Tente novamente.");
 
         var message = new ContactMessage(dto.Name.Trim(), dto.Email.Trim(), dto.Phone.Trim(), dto.Service.Trim(),
             dto.Message?.Trim(), consentGivenAt: DateTime.UtcNow);

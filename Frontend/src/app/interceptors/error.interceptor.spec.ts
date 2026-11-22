@@ -55,3 +55,54 @@ describe('errorInterceptor', () => {
     httpMock.expectNone('/api/services/1');
   }));
 });
+
+describe('errorInterceptor messages', () => {
+  let http: HttpClient;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([errorInterceptor])),
+        provideHttpClientTesting(),
+        { provide: LoggingService, useValue: jasmine.createSpyObj('LoggingService', ['error', 'debug']) },
+      ],
+    });
+    http = TestBed.inject(HttpClient);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => httpMock.verify());
+
+  function messageFor(answer: (request: ReturnType<HttpTestingController['expectOne']>) => void): string {
+    let message = '';
+    http.post('/api/x', {}).subscribe({ error: (e) => (message = e.userMessage) });
+    answer(httpMock.expectOne('/api/x'));
+    return message;
+  }
+
+  it("shows the API's own reason when it rejects a request", () => {
+    const message = messageFor((r) => r.flush({ title: 'Invalid request', detail: "'Nome' deve ser informado." }, { status: 400, statusText: 'Bad Request' }));
+    expect(message).toBe("'Nome' deve ser informado.");
+  });
+
+  it("shows the API's own reason for a conflict", () => {
+    const detail = 'Esta categoria é usada por 1 serviço(s). Mova-os para outra categoria antes de excluí-la.';
+    expect(messageFor((r) => r.flush({ detail }, { status: 409, statusText: 'Conflict' }))).toBe(detail);
+  });
+
+  it('keeps the generic message for a 400 that carries no reason', () => {
+    const message = messageFor((r) => r.flush({ title: 'One or more validation errors occurred.', errors: { isActive: ['x'] } }, { status: 400, statusText: 'Bad Request' }));
+    expect(message).toBe('Requisição inválida. Por favor, verifique os dados enviados.');
+  });
+
+  it('keeps the generic message for a server error, whatever its body says', () => {
+    const message = messageFor((r) => r.flush({ detail: 'An unexpected error occurred.' }, { status: 500, statusText: 'Server Error' }));
+    expect(message).toBe('Erro interno do servidor. Por favor, tente novamente mais tarde.');
+  });
+
+  it("says the server could not be reached instead of the browser's English error", () => {
+    const message = messageFor((r) => r.error(new ProgressEvent('error')));
+    expect(message).toBe('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
+  });
+});

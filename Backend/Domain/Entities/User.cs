@@ -23,10 +23,10 @@ namespace Domain.Entities
 
         public User(Guid id, string email, string passwordHash, UserRole role)
         {
-            if (id == Guid.Empty) throw new DomainException("Id cannot be empty");
-            if (string.IsNullOrWhiteSpace(email)) throw new DomainException("Email is required");
-            if (string.IsNullOrWhiteSpace(passwordHash)) throw new DomainException("PasswordHash is required");
-            if (!IsValidEmail(email)) throw new DomainException("Invalid email format");
+            if (id == Guid.Empty) throw new DomainException("O id não pode ser vazio.");
+            if (string.IsNullOrWhiteSpace(email)) throw new DomainException("O campo E-mail é obrigatório.");
+            if (string.IsNullOrWhiteSpace(passwordHash)) throw new DomainException("O campo Hash da senha é obrigatório.");
+            if (!IsValidEmail(email)) throw new DomainException("Formato de e-mail inválido.");
 
             Id = id;
             Email = email.ToLowerInvariant();
@@ -40,9 +40,9 @@ namespace Domain.Entities
         public void UpdateEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
-                throw new DomainException("Email is required");
+                throw new DomainException("O campo E-mail é obrigatório.");
             if (!IsValidEmail(email))
-                throw new DomainException("Invalid email format");
+                throw new DomainException("Formato de e-mail inválido.");
 
             Email = email.ToLowerInvariant();
             MarkAsModified();
@@ -58,7 +58,7 @@ namespace Domain.Entities
         public void UpdatePassword(string newPasswordHash)
         {
             if (string.IsNullOrWhiteSpace(newPasswordHash))
-                throw new DomainException("PasswordHash is required");
+                throw new DomainException("O campo Hash da senha é obrigatório.");
 
             PasswordHash = newPasswordHash;
             MarkAsModified();

@@ -22,11 +22,11 @@ namespace Domain.Entities
 
         public Testimonial(string authorName, string? avatarUrl, int rating, string content, string? badge = null)
         {
-            if (string.IsNullOrWhiteSpace(authorName)) throw new DomainException("AuthorName is required");
-            if (string.IsNullOrWhiteSpace(content)) throw new DomainException("Content is required");
-            if (rating < 1 || rating > 5) throw new DomainException("Rating must be between 1 and 5");
-            if (authorName.Length > AuthorNameMaxLength) throw new DomainException($"AuthorName cannot exceed {AuthorNameMaxLength} characters");
-            if (content.Length > ContentMaxLength) throw new DomainException($"Content cannot exceed {ContentMaxLength} characters");
+            if (string.IsNullOrWhiteSpace(authorName)) throw new DomainException("O campo Nome do autor é obrigatório.");
+            if (string.IsNullOrWhiteSpace(content)) throw new DomainException("O campo Conteúdo é obrigatório.");
+            if (rating < 1 || rating > 5) throw new DomainException("A nota deve estar entre 1 e 5.");
+            if (authorName.Length > AuthorNameMaxLength) throw new DomainException($"O campo Nome do autor deve ter no máximo {AuthorNameMaxLength} caracteres.");
+            if (content.Length > ContentMaxLength) throw new DomainException($"O campo Conteúdo deve ter no máximo {ContentMaxLength} caracteres.");
 
             AuthorName = authorName;
             AuthorAvatarUrl = string.IsNullOrWhiteSpace(avatarUrl) ? null : avatarUrl;
@@ -40,11 +40,11 @@ namespace Domain.Entities
 
         public void Update(string authorName, string? avatarUrl, int rating, string content, string? badge = null)
         {
-            if (string.IsNullOrWhiteSpace(authorName)) throw new DomainException("AuthorName is required");
-            if (string.IsNullOrWhiteSpace(content)) throw new DomainException("Content is required");
-            if (rating < 1 || rating > 5) throw new DomainException("Rating must be between 1 and 5");
-            if (authorName.Length > AuthorNameMaxLength) throw new DomainException($"AuthorName cannot exceed {AuthorNameMaxLength} characters");
-            if (content.Length > ContentMaxLength) throw new DomainException($"Content cannot exceed {ContentMaxLength} characters");
+            if (string.IsNullOrWhiteSpace(authorName)) throw new DomainException("O campo Nome do autor é obrigatório.");
+            if (string.IsNullOrWhiteSpace(content)) throw new DomainException("O campo Conteúdo é obrigatório.");
+            if (rating < 1 || rating > 5) throw new DomainException("A nota deve estar entre 1 e 5.");
+            if (authorName.Length > AuthorNameMaxLength) throw new DomainException($"O campo Nome do autor deve ter no máximo {AuthorNameMaxLength} caracteres.");
+            if (content.Length > ContentMaxLength) throw new DomainException($"O campo Conteúdo deve ter no máximo {ContentMaxLength} caracteres.");
 
             AuthorName = authorName;
             AuthorAvatarUrl = string.IsNullOrWhiteSpace(avatarUrl) ? null : avatarUrl;

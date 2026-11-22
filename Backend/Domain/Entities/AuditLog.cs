@@ -18,9 +18,9 @@ namespace Domain.Entities
 
         public AuditLog(Guid id, string entityType, Guid entityId, string action, Guid? userId, string? oldValues = null, string? newValues = null)
         {
-            if (id == Guid.Empty) throw new DomainException("Id cannot be empty");
-            if (string.IsNullOrWhiteSpace(entityType)) throw new DomainException("EntityType is required");
-            if (string.IsNullOrWhiteSpace(action)) throw new DomainException("Action is required");
+            if (id == Guid.Empty) throw new DomainException("O id não pode ser vazio.");
+            if (string.IsNullOrWhiteSpace(entityType)) throw new DomainException("O campo Tipo da entidade é obrigatório.");
+            if (string.IsNullOrWhiteSpace(action)) throw new DomainException("O campo Ação é obrigatório.");
 
             Id = id;
             EntityType = entityType;

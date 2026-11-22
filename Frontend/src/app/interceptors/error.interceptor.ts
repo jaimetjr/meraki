@@ -15,6 +15,12 @@ const RETRIABLE_STATUS_CODES = [
   HttpStatusCode.GatewayTimeout,
 ];
 
+function apiReason(error: HttpErrorResponse): string | undefined {
+  if (error.status < 400 || error.status >= 500) return undefined;
+  const detail = (error.error as { detail?: unknown } | null)?.detail;
+  return typeof detail === 'string' && detail.trim() ? detail : undefined;
+}
+
 /**
  * HTTP interceptor for global error handling and retry logic.
  * Retries failed requests for transient errors and provides user-friendly error messages.
@@ -36,10 +42,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       },
     }),
     catchError((error: HttpErrorResponse) => {
-      const userMessage = errorService.getHttpErrorMessage(
-        error.status,
-        errorService.getUserFriendlyMessage(error)
-      );
+      // The API explains rejected requests (4xx) in Portuguese in ProblemDetails "detail"; anything
+      // else gets the generic text for its status (never the browser's English error text).
+      const userMessage = apiReason(error) ?? errorService.getHttpErrorMessage(error.status);
 
       // Log the error
       loggingService.error(

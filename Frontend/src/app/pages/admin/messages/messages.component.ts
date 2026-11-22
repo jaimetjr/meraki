@@ -47,7 +47,7 @@ export class MessagesComponent implements OnInit {
     const isRead = !message.isRead;
     this.contactService.markRead(message.id, isRead).subscribe({
       next: () => this.messages.update((list) => list.map((m) => (m.id === message.id ? { ...m, isRead } : m))),
-      error: () => this.toastService.showError("Não foi possível atualizar a mensagem"),
+      error: (err) => this.toastService.showError(err?.userMessage || "Não foi possível atualizar a mensagem"),
     });
   }
 
@@ -68,7 +68,7 @@ export class MessagesComponent implements OnInit {
         this.toastService.showSuccess("Mensagem excluída");
         this.confirmId.set(null);
       },
-      error: () => this.toastService.showError("Não foi possível excluir a mensagem"),
+      error: (err) => this.toastService.showError(err?.userMessage || "Não foi possível excluir a mensagem"),
     });
   }
 }
