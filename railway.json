@@ -5,7 +5,6 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "preDeployCommand": ["dotnet /app/API.dll --migrate"],
     "healthcheckPath": "/api/therapists",
     "restartPolicyType": "ON_FAILURE"
   }

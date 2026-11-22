@@ -21,5 +21,6 @@ COPY --from=api /app ./
 COPY --from=site /src/dist/meraki-app/browser ./wwwroot
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_CONTENTROOT=/app
-# Railway passes the port in PORT; 8080 anywhere else.
-CMD ["sh", "-c", "ASPNETCORE_HTTP_PORTS=${PORT:-8080} exec dotnet /app/API.dll"]
+# Apply pending migrations, then start (one instance, so no two starts race; if migrating fails, the app
+# never starts on a half-updated database). Railway passes the port in PORT; 8080 anywhere else.
+CMD ["sh", "-c", "dotnet /app/API.dll --migrate && ASPNETCORE_HTTP_PORTS=${PORT:-8080} exec dotnet /app/API.dll"]

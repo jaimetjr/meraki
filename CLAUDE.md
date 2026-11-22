@@ -21,7 +21,7 @@ dotnet ef database update --project Infrastructure --startup-project API
 
 - `dotnet test` uses Microsoft.Testing.Platform (opted in by the repo-root `global.json`), so filters go after `--` as shown.
 - `dotnet ef` builds the API host to get its configuration. The connection string **and** `Jwt:SecretKey` must be configured (user-secrets), or the command fails with "ConnectionStrings:DefaultConnection is not configured". There is no design-time factory.
-- Migrations are never applied automatically at startup. In production, Railway's pre-deploy step runs `dotnet /app/API.dll --migrate`, which applies them and exits.
+- The app never applies migrations itself at startup. In production, the container's start command first runs `dotnet /app/API.dll --migrate` (applies them and exits) and only then starts the app. Railway's pre-deploy step didn't run for us, so that isn't used.
 
 Frontend (run from `Frontend/`):
 
@@ -35,7 +35,7 @@ npx ng test --watch=false --browsers=ChromeHeadless --include=src/app/services/c
 
 ## Deployment (Railway)
 
-- **One service:** the repo-root `Dockerfile` builds the site into the API's `wwwroot`, and `railway.json` sets the build, the pre-deploy migrate step and the health check.
+- **One service:** the repo-root `Dockerfile` builds the site into the API's `wwwroot`, and `railway.json` sets the build and the health check. The start command migrates first, then starts the app; this is safe only while there is one instance.
 - **Serving the site:** the API serves it only when `wwwroot/index.html` exists. Site routes fall back to `index.html`; unknown `/api/*` routes stay 404.
 - **Proxy:** the API trusts `X-Forwarded-For`/`-Proto` from any sender, because on Railway only its proxy can reach the app.
 - **Images:** they live on a Railway volume mounted at `/data` (`Storage__Local__RootPath=/data/uploads`). The image runs as non-root, so the service needs `RAILWAY_RUN_UID=0`.
