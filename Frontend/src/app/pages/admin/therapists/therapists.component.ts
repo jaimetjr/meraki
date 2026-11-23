@@ -8,11 +8,11 @@ import { AdminConfirmDialogComponent } from "../../../components/admin/admin-con
 import { AdminFormActionsComponent } from "../../../components/admin/admin-form-actions/admin-form-actions.component";
 import { AdminFormModalComponent } from "../../../components/admin/admin-form-modal/admin-form-modal.component";
 import { TherapistsService } from "../../../services/therapists.service";
-import { SpecialtiesService } from "../../../services/specialties.service";
+import { ServicesService } from "../../../services/services.service";
 import { ConsultorioMEService, type ConsultorioMEProfessional } from "../../../services/consultoriome.service";
 import { ToastService } from "../../../services/toast.service";
 import type { Therapist } from "../../../models/therapist.model";
-import type { Specialty } from "../../../models/specialty.model";
+import type { Service } from "../../../models/service.model";
 import { urlValidator } from "../../../validators/custom.validators";
 import { environment } from "../../../../environments/environment";
 
@@ -35,12 +35,13 @@ import { environment } from "../../../../environments/environment";
 export class TherapistsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private therapistsService = inject(TherapistsService);
-  private specialtiesService = inject(SpecialtiesService);
+  private servicesService = inject(ServicesService);
   private consultorioMEService = inject(ConsultorioMEService);
   private toastService = inject(ToastService);
 
   therapists = signal<Therapist[]>([]);
-  specialties = signal<Specialty[]>([]);
+  /** The clinic's services, shown as checkboxes ("Serviços que atende"). */
+  services = signal<Service[]>([]);
   professionals = signal<ConsultorioMEProfessional[]>([]);
   loading = signal(false);
   saving = signal(false);
@@ -59,7 +60,7 @@ export class TherapistsComponent implements OnInit {
     experience: ["", Validators.required],
     education: ["", Validators.required],
     proId: [""],
-    specialtyIds: [[] as string[]],
+    serviceIds: [[] as string[]],
   });
 
   ngOnInit(): void {
@@ -77,8 +78,8 @@ export class TherapistsComponent implements OnInit {
       error: () => this.error.set("Não foi possível carregar terapeutas"),
       complete: () => this.loading.set(false),
     });
-    this.specialtiesService.list().subscribe({
-      next: (data) => this.specialties.set(data),
+    this.servicesService.list().subscribe({
+      next: (data) => this.services.set(data),
       error: () => {},
     });
   }
@@ -113,7 +114,7 @@ export class TherapistsComponent implements OnInit {
       experience: item.experience,
       education: item.education,
       proId: item.proId || "",
-      specialtyIds: item.specialties?.map(s => s.id).filter((id): id is string => Boolean(id)) || [],
+      serviceIds: (item.services ?? []).map((s) => s.id),
     });
     // Make image file optional when editing (image already exists)
     this.form.get('imageFile')?.clearValidators();
@@ -149,11 +150,11 @@ export class TherapistsComponent implements OnInit {
       formData.append('proId', value.proId);
     }
     
-    // The API replaces the therapist's specialties with exactly these ids and reads nothing else,
-    // so send the selected ids as they are: never look them up in the dropdown's list, which may
-    // not have loaded (an empty list here would delete every specialty).
-    const specialtyIds = (value.specialtyIds || []).filter(Boolean);
-    formData.append('specialties', JSON.stringify(specialtyIds.map((id) => ({ id }))));
+    // The API replaces the therapist's services with exactly these ids and reads nothing else,
+    // so send the ticked ids as they are: never look them up in the checkbox list, which may
+    // not have loaded (an empty list here would remove every service).
+    const serviceIds = (value.serviceIds || []).filter(Boolean);
+    formData.append('services', JSON.stringify(serviceIds.map((id) => ({ id }))));
     
     // Add image file if provided
     if (value.imageFile) {
@@ -167,10 +168,11 @@ export class TherapistsComponent implements OnInit {
 
     (request as Observable<unknown>).subscribe({
       next: () => {
+        // Before cancelEdit(), which clears editingId.
+        const action = this.editingId() ? 'atualizado' : 'criado';
         this.saving.set(false);
         this.cancelEdit();
         this.loadAll();
-        const action = this.editingId() ? 'atualizado' : 'criado';
         this.toastService.showSuccess(`Terapeuta ${action} com sucesso!`);
       },
       error: (err) => {
@@ -212,14 +214,18 @@ export class TherapistsComponent implements OnInit {
     });
   }
 
-  specialtiesLabel(item: Therapist): string {
-    return (item.specialties || []).map((s) => s.name).join(", ") || "-";
+  servicesLabel(item: Therapist): string {
+    return (item.services || []).map((s) => s.name).join(", ") || "-";
   }
 
-  onSpecialtiesChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const selectedIds = Array.from(select.selectedOptions, option => option.value);
-    this.form.get('specialtyIds')?.setValue(selectedIds);
+  offersService(serviceId: string | undefined): boolean {
+    return !!serviceId && (this.form.value.serviceIds ?? []).includes(serviceId);
+  }
+
+  toggleService(serviceId: string | undefined, offered: boolean) {
+    if (!serviceId) return;
+    const current = (this.form.value.serviceIds ?? []).filter((id) => id !== serviceId);
+    this.form.patchValue({ serviceIds: offered ? [...current, serviceId] : current });
   }
 }
 

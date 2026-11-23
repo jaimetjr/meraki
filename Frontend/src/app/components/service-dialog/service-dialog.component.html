@@ -41,22 +41,41 @@
             {{service()?.longDescription}}
           </p>
   
-          <div class="py-4">
-            <h4 class="mb-2 font-medium text-green-700">Benefícios:</h4>
-            <ul class="ml-5 list-disc space-y-1 text-gray-600">
-              @for (benefit of service()?.benefits || []; track $index) {
-                <li>{{benefit.title}}</li>
-              }
-            </ul>
-  
-            <div class="mt-6 grid grid-cols-2 gap-4">
-              <div class="rounded-lg bg-green-50 p-3">
-                <h5 class="font-medium text-green-700">Duração</h5>
-                <p class="text-gray-600">{{service()?.duration}}</p>
+          <div class="py-4 space-y-6">
+            @if (service()?.benefits?.length) {
+              <div>
+                <h4 class="mb-2 font-medium text-green-700">Benefícios:</h4>
+                <ul class="ml-5 list-disc space-y-1 text-gray-600">
+                  @for (benefit of service()?.benefits ?? []; track $index) {
+                    <li>{{ benefit }}</li>
+                  }
+                </ul>
               </div>
+            }
+
+            @if (therapistNames()) {
+              <div>
+                <h4 class="mb-2 font-medium text-green-700">Quem atende:</h4>
+                <p class="text-gray-600">{{ therapistNames() }}</p>
+              </div>
+            }
+
+            <div class="grid grid-cols-2 gap-4">
+              @if (service()?.duration) {
+                <div class="rounded-lg bg-green-50 p-3">
+                  <h5 class="font-medium text-green-700">Duração</h5>
+                  <p class="text-gray-600">{{ service()?.duration }}</p>
+                </div>
+              }
               <div class="rounded-lg bg-green-50 p-3">
                 <h5 class="font-medium text-green-700">Valor</h5>
-                <p class="text-gray-600">{{service()?.price}}</p>
+                <p class="text-gray-600">
+                  @if (service()?.price !== null && service()?.price !== undefined) {
+                    {{ service()?.price | currency:service()?.currency }}
+                  } @else {
+                    Sob consulta
+                  }
+                </p>
               </div>
             </div>
           </div>

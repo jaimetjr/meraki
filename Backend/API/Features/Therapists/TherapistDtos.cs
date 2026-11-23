@@ -1,5 +1,4 @@
 using API.Common;
-using API.Features.Specialties;
 using Domain.Entities;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
@@ -17,11 +16,11 @@ public class TherapistDto
     public string Education { get; set; } = default!;
     public string? ProId { get; set; }
 
-    /// <summary>Sent as a JSON array in the "specialties" form field; only the ids are used.
-    /// Omitted (null) on update keeps the current specialties.</summary>
-    [ModelBinder(typeof(FormJsonModelBinder), Name = "specialties")]
+    /// <summary>The services this therapist offers. Sent as a JSON array in the "services" form field;
+    /// only the ids are used. Omitted (null) on update keeps the current services; [] clears them.</summary>
+    [ModelBinder(typeof(FormJsonModelBinder), Name = "services")]
     [ValidateNever]
-    public List<SpecialtyDto>? Specialties { get; set; }
+    public List<IdNameDto>? Services { get; set; }
 }
 
 public static class TherapistMappings
@@ -35,7 +34,7 @@ public static class TherapistMappings
         Experience = therapist.Experience,
         Education = therapist.Education,
         ProId = therapist.ProId,
-        Specialties = therapist.Specialties.Select(s => s.ToDto()).ToList(),
+        Services = therapist.Services.OrderBy(s => s.Name).Select(s => new IdNameDto { Id = s.Id, Name = s.Name }).ToList(),
     };
 }
 

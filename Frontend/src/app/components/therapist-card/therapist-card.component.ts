@@ -1,4 +1,4 @@
-import { Component, input, ChangeDetectionStrategy } from "@angular/core"
+import { Component, input, computed, ChangeDetectionStrategy } from "@angular/core"
 import { ImageOrInitialsComponent } from "../image-or-initials/image-or-initials.component"
 import type { Therapist } from "../../models/therapist.model"
 
@@ -12,4 +12,7 @@ import type { Therapist } from "../../models/therapist.model"
 })
 export class TherapistCardComponent {
   therapist = input.required<Therapist>()
+
+  /** The services this therapist offers, e.g. "Reiki · Massagem"; "" when none are linked. */
+  servicesLine = computed(() => (this.therapist().services ?? []).map((s) => s.name).join(" · "))
 }

@@ -5,105 +5,119 @@ using Domain.Enums;
 
 namespace API.Tests;
 
-/// <summary>Updates replace a relation list; only existing, active IDs are accepted.</summary>
+/// <summary>
+/// A therapist's services and a service's benefits are replaced, not merged, on update; omitting the list keeps
+/// the current one. Only existing, active services can be linked to a therapist.
+/// </summary>
 public class RelationsTests(ApiFactory api)
 {
     private static string Json(object value) => JsonSerializer.Serialize(value);
 
-    private static MultipartFormDataContent TherapistForm(string name, params Guid[] specialtyIds) => Http.Form(
+    private static MultipartFormDataContent TherapistForm(string name, params Guid[] serviceIds) => Http.Form(
         ("Name", name), ("Bio", "Bio"), ("Experience", "5"), ("Education", "Edu"),
-        ("specialties", Json(specialtyIds.Select(id => new { id, name = "as sent by the admin UI" }).ToArray())));
+        ("services", Json(serviceIds.Select(id => new { id, name = "as sent by the admin UI" }).ToArray())));
 
-    private static MultipartFormDataContent ServiceForm(string name, Guid categoryId, string benefitsJson) => Http.Form(
-        ("Name", name), ("Description", "Desc"), ("Price", "10"), ("Currency", "BRL"),
-        ("category", Json(new { id = categoryId, name = "as sent by the admin UI" })), ("benefits", benefitsJson));
+    private static MultipartFormDataContent ServiceForm(string name, string? benefitsJson) => Http.Form(
+        ("Name", name), ("Description", "Desc"), ("benefits", benefitsJson));
+
+    private static async Task<Guid> CreateServiceAsync(HttpClient client, string? name = null) =>
+        (await (await client.PostAsync("/api/services", ServiceForm(name ?? Http.Unique("Svc"), null))).Json()).Id();
+
+    private static async Task<Guid> CreateTherapistAsync(HttpClient client, string name, params Guid[] serviceIds) =>
+        (await (await client.PostAsync("/api/therapists", TherapistForm(name, serviceIds))).Json()).Id();
+
+    private async Task<List<string>> BenefitsOf(Guid serviceId) =>
+        (await api.CreateClient().GetJson($"/api/services/{serviceId}")).GetProperty("benefits")
+            .EnumerateArray().Select(b => b.GetString()!).ToList();
+
+    private async Task<List<Guid>> ServicesOf(Guid therapistId) =>
+        (await api.CreateClient().GetJson($"/api/therapists/{therapistId}")).GetProperty("services")
+            .EnumerateArray().Select(s => s.Id()).ToList();
 
     [Fact]
-    public async Task Removing_a_specialty_from_a_therapist_persists()
+    public async Task Removing_a_service_from_a_therapist_persists()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var keep = await client.CreateAndGetId("/api/specialties", new { name = Http.Unique("Keep") });
-        var drop = await client.CreateAndGetId("/api/specialties", new { name = Http.Unique("Drop") });
+        var keep = await CreateServiceAsync(client);
+        var drop = await CreateServiceAsync(client);
         var name = Http.Unique("Therapist");
-        var id = (await (await client.PostAsync("/api/therapists", TherapistForm(name, keep, drop))).Json()).Id();
+        var id = await CreateTherapistAsync(client, name, keep, drop);
 
         var update = await client.PutAsync($"/api/therapists/{id}", TherapistForm(name, keep));
 
         Assert.Equal(HttpStatusCode.NoContent, update.StatusCode);
-        var specialties = (await api.CreateClient().GetJson($"/api/therapists/{id}")).GetProperty("specialties")
-            .EnumerateArray().Select(s => s.Id()).ToList();
-        Assert.Equal([keep], specialties);
+        Assert.Equal([keep], await ServicesOf(id));
     }
 
     [Fact]
-    public async Task Removing_a_benefit_from_a_service_persists()
+    public async Task A_service_s_benefits_are_replaced_on_update_and_kept_when_omitted()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var categoryId = await client.CreateAndGetId("/api/categories", new { name = Http.Unique("Cat") });
-        var keep = await client.CreateAndGetId("/api/benefits", new { title = Http.Unique("Keep") });
-        var drop = await client.CreateAndGetId("/api/benefits", new { title = Http.Unique("Drop") });
         var name = Http.Unique("Svc");
-        var id = (await (await client.PostAsync("/api/services",
-            ServiceForm(name, categoryId, Json(new[] { new { id = keep, title = "x" }, new { id = drop, title = "x" } })))).Json()).Id();
+        var id = (await (await client.PostAsync("/api/services", ServiceForm(name, Json(new[] { "Relaxamento", "Sono" })))).Json()).Id();
 
-        var update = await client.PutAsync($"/api/services/{id}", ServiceForm(name, categoryId, Json(new[] { new { id = keep, title = "x" } })));
+        await client.PutAsync($"/api/services/{id}", ServiceForm(name, Json(new[] { "Relaxamento" })));
+        Assert.Equal(["Relaxamento"], await BenefitsOf(id));
 
-        Assert.Equal(HttpStatusCode.NoContent, update.StatusCode);
-        var benefits = (await api.CreateClient().GetJson($"/api/services/{id}")).GetProperty("benefits")
-            .EnumerateArray().Select(b => b.Id()).ToList();
-        Assert.Equal([keep], benefits);
+        await client.PutAsync($"/api/services/{id}", ServiceForm(name, null));
+        Assert.Equal(["Relaxamento"], await BenefitsOf(id));
+
+        await client.PutAsync($"/api/services/{id}", ServiceForm(name, "[]"));
+        Assert.Empty(await BenefitsOf(id));
     }
 
     [Fact]
-    public async Task Therapist_with_an_unknown_specialty_is_rejected()
+    public async Task Therapist_with_an_unknown_service_is_rejected()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
 
         var response = await client.PostAsync("/api/therapists", TherapistForm(Http.Unique("T"), Guid.NewGuid()));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Therapist_with_a_deleted_specialty_is_rejected()
-    {
-        var client = await api.ClientAsAsync(UserRole.Admin);
-        var specialtyId = await client.CreateAndGetId("/api/specialties", new { name = Http.Unique("Gone") });
-        await client.DeleteAsync($"/api/specialties/{specialtyId}");
-
-        var response = await client.PostAsync("/api/therapists", TherapistForm(Http.Unique("T"), specialtyId));
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Service_benefit_without_an_id_is_rejected_instead_of_created()
-    {
-        var client = await api.ClientAsAsync(UserRole.Admin);
-        var categoryId = await client.CreateAndGetId("/api/categories", new { name = Http.Unique("Cat") });
-        var title = Http.Unique("Inline");
-
-        var response = await client.PostAsync("/api/services",
-            ServiceForm(Http.Unique("Svc"), categoryId, Json(new[] { new { title } })));
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var benefits = await api.CreateClient().GetJson("/api/benefits");
-        Assert.DoesNotContain(benefits.EnumerateArray(), b => b.Str("title") == title);
-    }
-
-    [Fact]
-    public async Task Deleting_a_category_that_services_use_is_a_conflict()
-    {
-        var client = await api.ClientAsAsync(UserRole.Admin);
-        var categoryId = await client.CreateAndGetId("/api/categories", new { name = Http.Unique("Used") });
-        await (await client.PostAsync("/api/services", ServiceForm(Http.Unique("Svc"), categoryId, "[]"))).Json();
-
-        var response = await client.DeleteAsync($"/api/categories/{categoryId}");
-
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        Assert.Equal(
-            "Esta categoria é usada por 1 serviço(s). Mova-os para outra categoria antes de excluí-la.",
+        Assert.Equal("Um dos serviços selecionados não existe mais. Recarregue a página e tente novamente.",
             await response.ProblemDetail());
-        Assert.Equal(HttpStatusCode.OK, (await api.CreateClient().GetAsync($"/api/categories/{categoryId}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Therapist_with_a_deleted_service_is_rejected()
+    {
+        var client = await api.ClientAsAsync(UserRole.Admin);
+        var serviceId = await CreateServiceAsync(client);
+        await client.DeleteAsync($"/api/services/{serviceId}");
+
+        var response = await client.PostAsync("/api/therapists", TherapistForm(Http.Unique("T"), serviceId));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task A_deleted_service_disappears_from_its_therapists()
+    {
+        var client = await api.ClientAsAsync(UserRole.Admin);
+        var serviceId = await CreateServiceAsync(client);
+        var therapistId = await CreateTherapistAsync(client, Http.Unique("T"), serviceId);
+
+        await client.DeleteAsync($"/api/services/{serviceId}");
+
+        Assert.Empty(await ServicesOf(therapistId));
+    }
+
+    [Fact]
+    public async Task A_service_lists_the_active_therapists_who_offer_it()
+    {
+        var client = await api.ClientAsAsync(UserRole.Admin);
+        var serviceId = await CreateServiceAsync(client);
+        var offersName = Http.Unique("Offers");
+        var offers = await CreateTherapistAsync(client, offersName, serviceId);
+        await CreateTherapistAsync(client, Http.Unique("Other"));
+        var deleted = await CreateTherapistAsync(client, Http.Unique("Deleted"), serviceId);
+        await client.DeleteAsync($"/api/therapists/{deleted}");
+
+        var therapists = (await api.CreateClient().GetJson($"/api/services/{serviceId}")).GetProperty("therapists")
+            .EnumerateArray().ToList();
+
+        var only = Assert.Single(therapists);
+        Assert.Equal(offers, only.Id());
+        Assert.Equal(offersName, only.Str("name"));
     }
 }

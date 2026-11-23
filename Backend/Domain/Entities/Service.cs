@@ -1,11 +1,6 @@
 using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.ValueObjects;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Domain.Entities;
 
@@ -15,22 +10,29 @@ public sealed class Service : AggregateRoot, ISoftDeletable
     public const int DescriptionMaxLength = 300;
     public const int LongDescriptionMaxLength = 1000;
     public const int DurationMaxLength = 50;
+    public const int BenefitMaxLength = 100;
+    public const int MaxBenefits = 20;
+
+    public static readonly string BenefitTooLongMessage = $"Cada benefício deve ter no máximo {BenefitMaxLength} caracteres.";
+    public static readonly string TooManyBenefitsMessage = $"Um serviço pode ter no máximo {MaxBenefits} benefícios.";
 
     public string Name { get; private set; } = null!;
     public string Description { get; private set; } = null!;
     public string? Image { get; private set; }
     public string? LongDescription { get; private set; }
-    public List<Benefit> Benefits { get; private set; } = new();
+    /// <summary>Short sentences shown as a list on the site, in the order the admin typed them.</summary>
+    public List<string> Benefits { get; private set; } = new();
     public string? Duration { get; private set; }
-    public Money Price { get; private set; } = null!;
-    public Guid CategoryId { get; private set; }
-    public Category? Category { get; private set; }
+    /// <summary>Null when the clinic doesn't publish a price ("sob consulta").</summary>
+    public Money? Price { get; private set; }
+    /// <summary>Who offers this service; managed from the therapist's side (<see cref="Therapist.SetServices"/>).</summary>
+    public List<Therapist> Therapists { get; private set; } = new();
     public bool IsActive { get; private set; }
 
     // EF Core parameterless constructor
     private Service() { }
 
-    public Service(string name, string description, string? image, Money money)
+    public Service(string name, string description, string? image, Money? price)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new DomainException("O campo Nome é obrigatório.");
         if (string.IsNullOrWhiteSpace(description)) throw new DomainException("O campo Descrição é obrigatório.");
@@ -40,7 +42,7 @@ public sealed class Service : AggregateRoot, ISoftDeletable
         Name = name;
         Description = description;
         Image = string.IsNullOrWhiteSpace(image) ? null : image;
-        Price = money ?? throw new ArgumentNullException(nameof(money));
+        Price = price;
         IsActive = true;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
@@ -50,30 +52,34 @@ public sealed class Service : AggregateRoot, ISoftDeletable
     {
         if (longDescription != null && longDescription.Length > LongDescriptionMaxLength)
             throw new DomainException($"O campo Descrição longa deve ter no máximo {LongDescriptionMaxLength} caracteres.");
-        
-        LongDescription = longDescription;
-        Duration = duration;
+        if (duration != null && duration.Length > DurationMaxLength)
+            throw new DomainException($"O campo Duração deve ter no máximo {DurationMaxLength} caracteres.");
+
+        LongDescription = string.IsNullOrWhiteSpace(longDescription) ? null : longDescription;
+        Duration = string.IsNullOrWhiteSpace(duration) ? null : duration.Trim();
         MarkAsModified();
     }
 
-    public void UpdateCategory(Category category)
-    {
-        ArgumentNullException.ThrowIfNull(category);
-        Category = category;
-        CategoryId = category.Id;
-        MarkAsModified();
-    }
-
-    /// <summary>Replaces the service's benefits with exactly the given set.</summary>
-    public void SetBenefits(IEnumerable<Benefit> benefits)
+    /// <summary>
+    /// Replaces the benefits with exactly these lines: each is trimmed, and empty lines and repeats are dropped.
+    /// </summary>
+    public void SetBenefits(IEnumerable<string> benefits)
     {
         ArgumentNullException.ThrowIfNull(benefits);
-        Benefits.Clear();
-        Benefits.AddRange(benefits.DistinctBy(b => b.Id));
+        var lines = benefits
+            .Select(b => b?.Trim())
+            .Where(b => !string.IsNullOrEmpty(b))
+            .Select(b => b!)
+            .Distinct()
+            .ToList();
+        if (lines.Any(b => b.Length > BenefitMaxLength)) throw new DomainException(BenefitTooLongMessage);
+        if (lines.Count > MaxBenefits) throw new DomainException(TooManyBenefitsMessage);
+
+        Benefits = lines;
         MarkAsModified();
     }
 
-    public void Update(string name, string description, string? image, Money price)
+    public void Update(string name, string description, string? image, Money? price)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new DomainException("O campo Nome é obrigatório.");
         if (string.IsNullOrWhiteSpace(description)) throw new DomainException("O campo Descrição é obrigatório.");
@@ -83,7 +89,7 @@ public sealed class Service : AggregateRoot, ISoftDeletable
         Name = name;
         Description = description;
         Image = string.IsNullOrWhiteSpace(image) ? null : image;
-        Price = price ?? throw new ArgumentNullException(nameof(price));
+        Price = price;
         MarkAsModified();
     }
 
@@ -92,5 +98,4 @@ public sealed class Service : AggregateRoot, ISoftDeletable
         IsActive = false;
         MarkAsModified();
     }
-
 }

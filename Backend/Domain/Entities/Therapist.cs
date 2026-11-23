@@ -20,7 +20,8 @@ namespace Domain.Entities
         public string Experience { get; private set; } = null!;
         public string Education { get; private set; } = null!;
         public string? ProId { get; private set; }
-        public List<Specialty> Specialties { get; private set; } = new();
+        /// <summary>The services this therapist offers.</summary>
+        public List<Service> Services { get; private set; } = new();
         public bool IsActive { get; private set; }
 
         // EF Core parameterless constructor
@@ -46,12 +47,12 @@ namespace Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
-        /// <summary>Replaces the therapist's specialties with exactly the given set.</summary>
-        public void SetSpecialties(IEnumerable<Specialty> specialties)
+        /// <summary>Replaces the services this therapist offers with exactly the given set.</summary>
+        public void SetServices(IEnumerable<Service> services)
         {
-            ArgumentNullException.ThrowIfNull(specialties);
-            Specialties.Clear();
-            Specialties.AddRange(specialties.DistinctBy(s => s.Id));
+            ArgumentNullException.ThrowIfNull(services);
+            Services.Clear();
+            Services.AddRange(services.DistinctBy(s => s.Id));
             MarkAsModified();
         }
 

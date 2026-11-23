@@ -1,4 +1,4 @@
-import type { Specialty } from "./specialty.model";
+import type { IdName } from "./id-name.model";
 
 export interface Therapist {
   id?: string;
@@ -8,6 +8,6 @@ export interface Therapist {
   experience: string;
   education: string;
   proId?: string;
-  specialty?: string;
-  specialties: Specialty[];
+  /** The services this therapist offers. */
+  services: IdName[];
 }

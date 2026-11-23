@@ -11,22 +11,25 @@ public class ContentTests(ApiFactory api)
     private static string JsonArray(params object[] items) => JsonSerializer.Serialize(items);
 
     [Fact]
-    public async Task Therapist_is_created_with_its_specialty()
+    public async Task Therapist_is_created_with_the_services_they_offer()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var specialtyName = Http.Unique("Spec");
-        var specialtyId = await client.CreateAndGetId("/api/specialties", new { name = specialtyName });
+        var serviceName = Http.Unique("Reiki");
+        var serviceId = (await (await client.PostAsync("/api/services", Http.Form(
+            ("Name", serviceName), ("Description", "Desc")))).Json()).Id();
         var name = Http.Unique("Therapist");
 
         var response = await client.PostAsync("/api/therapists", Http.Form(
             ("Name", name), ("Bio", "Bio text"), ("Experience", "10 anos"), ("Education", "Psicologia"),
-            ("specialties", JsonArray(new { id = specialtyId, name = specialtyName }))));
+            ("services", JsonArray(new { id = serviceId, name = serviceName }))));
 
         var id = (await response.Json()).Id();
         var therapist = await api.CreateClient().GetJson($"/api/therapists/{id}");
         Assert.Equal(name, therapist.Str("name"));
         Assert.Equal("Bio text", therapist.Str("bio"));
-        Assert.Contains(therapist.GetProperty("specialties").EnumerateArray(), s => s.Id() == specialtyId);
+        var service = Assert.Single(therapist.GetProperty("services").EnumerateArray());
+        Assert.Equal(serviceId, service.Id());
+        Assert.Equal(serviceName, service.Str("name"));
     }
 
     [Fact]
@@ -48,33 +51,56 @@ public class ContentTests(ApiFactory api)
     }
 
     [Fact]
-    public async Task Service_is_created_with_category_benefit_and_price()
+    public async Task Service_is_created_with_its_benefits_duration_and_price()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var categoryName = Http.Unique("Cat");
-        var categoryId = await client.CreateAndGetId("/api/categories", new { name = categoryName });
-        var benefitTitle = Http.Unique("Benefit");
-        var benefitId = await client.CreateAndGetId("/api/benefits", new { title = benefitTitle });
         var name = Http.Unique("Service");
 
+        // Benefits are typed one per line in the admin: surrounding spaces and empty lines are dropped.
         var response = await client.PostAsync("/api/services", Http.Form(
-            ("Name", name), ("Description", "Desc"), ("Price", "150"), ("Currency", "BRL"),
-            ("category", JsonSerializer.Serialize(new { id = categoryId, name = categoryName })),
-            ("benefits", JsonArray(new { id = benefitId, title = benefitTitle }))));
+            ("Name", name), ("Description", "Desc"), ("Duration", "60 min"), ("Price", "150"), ("Currency", "BRL"),
+            ("benefits", JsonArray("  Relaxamento ", "", "Equilíbrio energético"))));
 
         var id = (await response.Json()).Id();
         var service = await api.CreateClient().GetJson($"/api/services/{id}");
         Assert.Equal(name, service.Str("name"));
+        Assert.Equal("60 min", service.Str("duration"));
         Assert.Equal(150m, service.GetProperty("price").GetDecimal());
         Assert.Equal("BRL", service.Str("currency"));
-        Assert.Equal(categoryId, service.GetProperty("category").Id());
-        Assert.Contains(service.GetProperty("benefits").EnumerateArray(), b => b.Id() == benefitId);
-
-        var byCategory = await api.CreateClient().GetJson($"/api/services/category/{Uri.EscapeDataString(categoryName)}");
-        Assert.Contains(byCategory.EnumerateArray(), s => s.Id() == id);
+        Assert.Equal(["Relaxamento", "Equilíbrio energético"],
+            service.GetProperty("benefits").EnumerateArray().Select(b => b.GetString()));
 
         Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync($"/api/services/{id}")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await api.CreateClient().GetAsync($"/api/services/{id}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task A_service_s_price_is_optional()
+    {
+        var client = await api.ClientAsAsync(UserRole.Admin);
+        var name = Http.Unique("Service");
+        var id = (await (await client.PostAsync("/api/services", Http.Form(("Name", name), ("Description", "Desc")))).Json()).Id();
+        Assert.Equal(JsonValueKind.Null, (await api.CreateClient().GetJson($"/api/services/{id}")).GetProperty("price").ValueKind);
+
+        await client.PutAsync($"/api/services/{id}", Http.Form(("Name", name), ("Description", "Desc"), ("Price", "80")));
+        Assert.Equal(80m, (await api.CreateClient().GetJson($"/api/services/{id}")).GetProperty("price").GetDecimal());
+
+        // The admin always sends every field, so an update without a price removes it ("sob consulta").
+        await client.PutAsync($"/api/services/{id}", Http.Form(("Name", name), ("Description", "Desc")));
+        Assert.Equal(JsonValueKind.Null, (await api.CreateClient().GetJson($"/api/services/{id}")).GetProperty("price").ValueKind);
+    }
+
+    [Theory]
+    [InlineData("/api/categories")]
+    [InlineData("/api/benefits")]
+    [InlineData("/api/specialties")]
+    [InlineData("/api/services/category/Terapia")]
+    [InlineData("/api/therapists/specialty/Reiki")]
+    public async Task Removed_content_types_have_no_endpoints(string url)
+    {
+        var response = await api.CreateClient().GetAsync(url);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]

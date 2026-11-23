@@ -82,45 +82,34 @@ public static class Seeder
 
     private static async Task SeedDemoContentAsync(AppDbContext db)
     {
-        if (!await db.Categories.AnyAsync())
+        // Services first: therapists are linked to the services they offer.
+        if (!await db.Services.AnyAsync())
         {
-            db.Categories.AddRange(new Category("Terapia"), new Category("Mindfulness"), new Category("Cursos"));
-            await db.SaveChangesAsync();
-        }
+            var reiki = new Service("Reiki", "Terapia energética pela imposição das mãos", null, new Money(120, "BRL"));
+            reiki.UpdateDetails("Sessão de Reiki para equilíbrio energético e relaxamento profundo", "60 min");
+            reiki.SetBenefits(["Relaxamento", "Alívio do estresse", "Equilíbrio energético"]);
 
-        if (!await db.Benefits.AnyAsync())
-        {
-            db.Benefits.AddRange(
-                new Benefit("Alívio do Estresse", "Ajuda a reduzir o estresse e a ansiedade"),
-                new Benefit("Foco Aprimorado", "Melhora a concentração e a clareza mental"),
-                new Benefit("Equilíbrio Emocional", "Auxilia na regulação das emoções"),
-                new Benefit("Melhora do Sono", "Promove um sono mais tranquilo"),
-                new Benefit("Autoconhecimento", "Estimula a reflexão e o crescimento pessoal"));
-            await db.SaveChangesAsync();
-        }
+            // No price: the site shows it as "sob consulta".
+            var constellation = new Service("Constelação Familiar", "Abordagem sistêmica para questões familiares", null, null);
+            constellation.UpdateDetails("Atendimento individual ou em grupo com a abordagem sistêmica", "2 horas");
+            constellation.SetBenefits(["Compreensão das dinâmicas familiares", "Reconciliação com a própria história"]);
 
-        if (!await db.Specialties.AnyAsync())
-        {
-            db.Specialties.AddRange(
-                new Specialty("Ansiedade", "Apoio para lidar com crises de ansiedade"),
-                new Specialty("Depressão", "Ajuda no tratamento de sintomas depressivos"),
-                new Specialty("Autoestima", "Fortalecimento da confiança e valorização pessoal"),
-                new Specialty("Trauma", "Processo terapêutico para experiências traumáticas"));
+            db.Services.AddRange(reiki, constellation);
             await db.SaveChangesAsync();
         }
 
         if (!await db.Therapists.AnyAsync())
         {
-            var specialties = await db.Specialties.OrderBy(s => s.Name).ToListAsync();
-            Specialty Named(string name) => specialties.First(s => s.Name == name);
+            var services = await db.Services.ToListAsync();
+            Service Named(string name) => services.First(s => s.Name == name);
 
-            var ana = new Therapist("Dra. Ana Souza", "Psicóloga clínica com mais de 10 anos de experiência", null,
-                "10 anos atuando com TCC e trauma", "Doutorado em Psicologia");
-            ana.SetSpecialties([Named("Ansiedade"), Named("Trauma")]);
+            var ana = new Therapist("Dra. Ana Souza", "Terapeuta sistêmica com mais de 10 anos de experiência", null,
+                "10 anos conduzindo constelações familiares", "Formação em Constelação Familiar");
+            ana.SetServices([Named("Constelação Familiar")]);
 
-            var carlos = new Therapist("Carlos Lima", "Instrutor de mindfulness e meditação", null,
-                "8 anos ensinando práticas de atenção plena", "Certificação Internacional em Mindfulness");
-            carlos.SetSpecialties([Named("Autoestima")]);
+            var carlos = new Therapist("Carlos Lima", "Reikiano e instrutor de meditação", null,
+                "8 anos atendendo com Reiki", "Mestre em Reiki Usui");
+            carlos.SetServices([Named("Reiki")]);
 
             db.Therapists.AddRange(ana, carlos);
             await db.SaveChangesAsync();
@@ -137,25 +126,6 @@ public static class Seeder
             trauma.Schedule(DateTime.UtcNow.AddDays(20), null, Modality.Presencial, new Money(300, "BRL"), null);
 
             db.Courses.AddRange(mindfulness, trauma);
-            await db.SaveChangesAsync();
-        }
-
-        if (!await db.Services.AnyAsync())
-        {
-            var therapy = await db.Categories.FirstAsync(c => c.Name == "Terapia");
-            var benefits = await db.Benefits.OrderBy(b => b.Title).Take(3).ToListAsync();
-
-            var breathing = new Service("Respiração Consciente", "Técnica de relaxamento com foco na respiração", null, new Money(120, "BRL"));
-            breathing.UpdateDetails("Exercício respiratório para aliviar ansiedade", "30 minutos");
-            breathing.UpdateCategory(therapy);
-            breathing.SetBenefits(benefits);
-
-            var cbt = new Service("Sessão de Terapia Cognitiva", "Atendimento estruturado para reprogramação de pensamentos", null, new Money(200, "BRL"));
-            cbt.UpdateDetails("Sessão de TCC com terapeuta especializado", "1 hora");
-            cbt.UpdateCategory(therapy);
-            cbt.SetBenefits(benefits.Skip(1));
-
-            db.Services.AddRange(breathing, cbt);
             await db.SaveChangesAsync();
         }
 

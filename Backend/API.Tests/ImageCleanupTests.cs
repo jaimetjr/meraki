@@ -80,15 +80,13 @@ public class ImageCleanupTests(ApiFactory api)
     }
 
     [Fact]
-    public async Task A_service_rejected_for_an_unknown_benefit_leaves_no_file_behind()
+    public async Task A_therapist_rejected_for_an_unknown_service_leaves_no_file_behind()
     {
         var (client, storage, app) = await AdminWithRecordingStorageAsync();
         await using var _ = app;
-        var categoryId = await client.CreateAndGetId("/api/categories", new { name = Http.Unique("Cat") });
 
-        var response = await client.PostAsync("/api/services", WithPng(Http.Form(
-            ("Name", Http.Unique("S")), ("Description", "Desc"), ("Price", "10"), ("Currency", "BRL"),
-            ("category", JsonSerializer.Serialize(new { id = categoryId })), ("benefits", UnknownIds()))));
+        var response = await client.PostAsync("/api/therapists", WithPng(Http.Form(
+            ("Name", Http.Unique("T")), ("Bio", "Bio"), ("Experience", "1"), ("Education", "E"), ("services", UnknownIds()))));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var uploaded = Assert.Single(storage.Saved);
@@ -96,7 +94,7 @@ public class ImageCleanupTests(ApiFactory api)
     }
 
     [Fact]
-    public async Task A_therapist_update_rejected_for_an_unknown_specialty_removes_the_new_file_and_keeps_the_current_one()
+    public async Task A_therapist_update_rejected_for_an_unknown_service_removes_the_new_file_and_keeps_the_current_one()
     {
         var (client, storage, app) = await AdminWithRecordingStorageAsync();
         await using var _ = app;
@@ -106,7 +104,7 @@ public class ImageCleanupTests(ApiFactory api)
         var current = Assert.Single(storage.Saved);
 
         var form = WithPng(Therapist());
-        form.Add(new StringContent(UnknownIds()), "specialties");
+        form.Add(new StringContent(UnknownIds()), "services");
         var response = await client.PutAsync($"/api/therapists/{id}", form);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

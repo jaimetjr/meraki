@@ -9,12 +9,8 @@ import { AdminConfirmDialogComponent } from "../../../components/admin/admin-con
 import { AdminFormActionsComponent } from "../../../components/admin/admin-form-actions/admin-form-actions.component";
 import { AdminFormModalComponent } from "../../../components/admin/admin-form-modal/admin-form-modal.component";
 import { ServicesService } from "../../../services/services.service";
-import { CategoriesService } from "../../../services/categories.service";
-import { BenefitsService } from "../../../services/benefits.service";
 import { ToastService } from "../../../services/toast.service";
 import type { Service } from "../../../models/service.model";
-import type { Category } from "../../../models/category.model";
-import type { Benefit } from "../../../models/benefit.model";
 import { urlValidator } from "../../../validators/custom.validators";
 
 @Component({
@@ -37,13 +33,9 @@ import { urlValidator } from "../../../validators/custom.validators";
 export class ServicesComponent implements OnInit {
   private fb = inject(FormBuilder);
   private servicesService = inject(ServicesService);
-  private categoriesService = inject(CategoriesService);
-  private benefitsService = inject(BenefitsService);
   private toastService = inject(ToastService);
 
   services = signal<Service[]>([]);
-  categories = signal<Category[]>([]);
-  benefits = signal<Benefit[]>([]);
   loading = signal(false);
   saving = signal(false);
   error = signal<string | null>(null);
@@ -53,15 +45,15 @@ export class ServicesComponent implements OnInit {
 
   form = this.fb.group({
     name: ["", [Validators.required, Validators.maxLength(100)]],
-    description: ["", [Validators.required, Validators.maxLength(500)]],
+    description: ["", [Validators.required, Validators.maxLength(300)]],
     image: [""], // Keep for existing data, but not used for new uploads
     imageFile: [null as File | null, Validators.required],
-    longDescription: ["", Validators.maxLength(2000)],
+    longDescription: ["", Validators.maxLength(1000)],
     duration: ["", Validators.maxLength(50)],
-    price: [0, [Validators.required, Validators.min(0)]],
-    currency: ["BRL", Validators.required],
-    categoryId: ["", Validators.required],
-    benefitIds: [[] as string[]],
+    // Empty = no published price ("sob consulta").
+    price: [null as number | null, Validators.min(0)],
+    // One benefit per line.
+    benefits: [""],
   });
 
   ngOnInit(): void {
@@ -76,23 +68,12 @@ export class ServicesComponent implements OnInit {
       error: () => this.error.set("Não foi possível carregar serviços"),
       complete: () => this.loading.set(false),
     });
-    this.categoriesService.list().subscribe({
-      next: (data) => this.categories.set(data),
-      error: () => {},
-    });
-    this.benefitsService.list().subscribe({
-      next: (data) => this.benefits.set(data),
-      error: () => {},
-    });
   }
 
   startCreate() {
     this.editingId.set(null);
     this.isCreating.set(true);
-    this.form.reset({
-      currency: "BRL",
-      price: 0,
-    });
+    this.form.reset();
     // Require image file for new services
     this.form.get('imageFile')?.setValidators(Validators.required);
     this.form.get('imageFile')?.updateValueAndValidity();
@@ -107,11 +88,9 @@ export class ServicesComponent implements OnInit {
       image: item.image,
       imageFile: null,
       longDescription: item.longDescription,
-      duration: item.duration,
+      duration: item.duration ?? "",
       price: item.price,
-      currency: item.currency,
-      categoryId: item.category?.id || "",
-      benefitIds: item.benefits?.map(b => b.id).filter((id): id is string => Boolean(id)) || [],
+      benefits: (item.benefits ?? []).join("\n"),
     });
     // Make image file optional when editing (image already exists)
     this.form.get('imageFile')?.clearValidators();
@@ -121,10 +100,7 @@ export class ServicesComponent implements OnInit {
   cancelEdit() {
     this.editingId.set(null);
     this.isCreating.set(false);
-    this.form.reset({
-      currency: "BRL",
-      price: 0,
-    });
+    this.form.reset();
     // Reset image file validation
     this.form.get('imageFile')?.setValidators(Validators.required);
     this.form.get('imageFile')?.updateValueAndValidity();
@@ -144,8 +120,10 @@ export class ServicesComponent implements OnInit {
     formData.append('Description', value.description || '');
     // Use existing image URL if editing and no new file uploaded, otherwise empty (file will be uploaded)
     formData.append('Image', value.imageFile ? '' : (value.image || ''));
-    formData.append('Price', (value.price || 0).toString());
-    formData.append('Currency', value.currency || 'BRL');
+    if (value.price !== null && value.price !== undefined) {
+      formData.append('Price', value.price.toString());
+      formData.append('Currency', 'BRL');
+    }
     
     // Add optional fields
     if (value.longDescription) {
@@ -155,23 +133,8 @@ export class ServicesComponent implements OnInit {
       formData.append('Duration', value.duration);
     }
     
-    // Add category (required) - send as lowercase 'category' parameter (matching backend)
-    const selectedCategory = this.categories().find(c => c.id === value.categoryId);
-    if (!selectedCategory || !selectedCategory.id) {
-      this.error.set("Categoria selecionada não encontrada. Por favor, recarregue a página.");
-      this.toastService.showError("Categoria selecionada não encontrada");
-      return;
-    }
-    formData.append('category', JSON.stringify({ 
-      Id: selectedCategory.id, 
-      Name: selectedCategory.name 
-    }));
-    
-    // The API replaces the service's benefits with exactly these ids and reads nothing else,
-    // so send the selected ids as they are: never look them up in the dropdown's list, which may
-    // not have loaded (an empty list here would delete every benefit).
-    const benefitIds = (value.benefitIds || []).filter(Boolean);
-    formData.append('benefits', JSON.stringify(benefitIds.map((id) => ({ id }))));
+    // The API replaces the service's benefits with exactly this list: one per typed line.
+    formData.append('benefits', JSON.stringify(ServicesComponent.benefitLines(value.benefits)));
     
     // Add image file (required)
     if (value.imageFile) {
@@ -185,10 +148,11 @@ export class ServicesComponent implements OnInit {
 
     (request as Observable<unknown>).subscribe({
       next: () => {
+        // Before cancelEdit(), which clears editingId.
+        const action = this.editingId() ? 'atualizado' : 'criado';
         this.saving.set(false);
         this.cancelEdit();
         this.loadAll();
-        const action = this.editingId() ? 'atualizado' : 'criado';
         this.toastService.showSuccess(`Serviço ${action} com sucesso!`);
       },
       error: (err) => {
@@ -230,10 +194,9 @@ export class ServicesComponent implements OnInit {
     });
   }
 
-  onBenefitsChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const selectedIds = Array.from(select.selectedOptions, option => option.value);
-    this.form.get('benefitIds')?.setValue(selectedIds);
+  /** The benefits textarea as a list: one per line, trimmed, without empty lines. */
+  static benefitLines(text: string | null | undefined): string[] {
+    return (text ?? "").split("\n").map((line) => line.trim()).filter(Boolean);
   }
 }
 

@@ -96,7 +96,7 @@ describe('errorInterceptor messages', () => {
   });
 
   it("shows the API's own reason for a conflict", () => {
-    const detail = 'Esta categoria é usada por 1 serviço(s). Mova-os para outra categoria antes de excluí-la.';
+    const detail = 'Já existe um usuário com este e-mail.';
     expect(messageFor((r) => r.flush({ detail }, { status: 409, statusText: 'Conflict' }))).toBe(detail);
   });
 

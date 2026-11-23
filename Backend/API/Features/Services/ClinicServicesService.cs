@@ -1,5 +1,4 @@
 using API.Common;
-using API.Features.Categories;
 using Domain.Entities;
 using Domain.ValueObjects;
 using Infrastructure.Data;
@@ -10,10 +9,8 @@ namespace API.Features.Services;
 /// <summary>Manages the services the clinic offers (the <see cref="Service"/> entity).</summary>
 public class ClinicServicesService(AppDbContext db, ImageUploads images)
 {
-    private const string BenefitNotFound =
-        "Um dos benefícios selecionados não existe mais. Recarregue a página e tente novamente.";
-
-    private IQueryable<Service> Services => db.Services.Include(s => s.Category).Include(s => s.Benefits);
+    // The query filter hides deleted therapists from this list too.
+    private IQueryable<Service> Services => db.Services.Include(s => s.Therapists);
 
     public async Task<List<ServiceDto>> GetAllAsync() =>
         (await Services.AsNoTracking().OrderByDescending(s => s.CreatedAt).ToListAsync()).ConvertAll(s => s.ToDto());
@@ -21,19 +18,12 @@ public class ClinicServicesService(AppDbContext db, ImageUploads images)
     public async Task<ServiceDto?> GetByIdAsync(Guid id) =>
         (await Services.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id))?.ToDto();
 
-    public async Task<List<ServiceDto>> GetByCategoryAsync(string categoryName) =>
-        (await db.Services.AsNoTracking().Include(s => s.Category)
-            .Where(s => s.Category != null && s.Category.Name == categoryName)
-            .ToListAsync()).ConvertAll(s => s.ToDto());
-
     public Task<ServiceDto> CreateAsync(ServiceDto dto, IFormFile? image = null) =>
         images.SaveWithAsync(null, image, removeImage: false, "services", async imageUrl =>
         {
-            var service = new Service(dto.Name, dto.Description, imageUrl, new Money(dto.Price, dto.Currency));
-            if (!string.IsNullOrWhiteSpace(dto.LongDescription) || !string.IsNullOrWhiteSpace(dto.Duration))
-                service.UpdateDetails(dto.LongDescription, dto.Duration);
-            service.UpdateCategory(await LoadCategoryAsync(dto.Category));
-            service.SetBenefits(await db.Benefits.LoadAllByIdAsync(dto.Benefits?.Select(b => b.Id), BenefitNotFound));
+            var service = new Service(dto.Name, dto.Description, imageUrl, PriceOf(dto));
+            service.UpdateDetails(dto.LongDescription, dto.Duration);
+            service.SetBenefits(dto.Benefits ?? []);
 
             db.Services.Add(service);
             await db.SaveChangesAsync();
@@ -42,17 +32,15 @@ public class ClinicServicesService(AppDbContext db, ImageUploads images)
 
     public async Task<bool> UpdateAsync(Guid id, ServiceDto dto, IFormFile? image = null, bool removeImage = false)
     {
-        var service = await Services.FirstOrDefaultAsync(s => s.Id == id);
+        var service = await db.Services.FirstOrDefaultAsync(s => s.Id == id);
         if (service == null) return false;
 
         return await images.SaveWithAsync(service.Image, image, removeImage, "services", async imageUrl =>
         {
-            service.Update(dto.Name, dto.Description, imageUrl, new Money(dto.Price, dto.Currency));
+            service.Update(dto.Name, dto.Description, imageUrl, PriceOf(dto));
             service.UpdateDetails(dto.LongDescription, dto.Duration);
-            if (dto.Category != null)
-                service.UpdateCategory(await LoadCategoryAsync(dto.Category));
             if (dto.Benefits != null)
-                service.SetBenefits(await db.Benefits.LoadAllByIdAsync(dto.Benefits.Select(b => b.Id), BenefitNotFound));
+                service.SetBenefits(dto.Benefits);
 
             await db.SaveChangesAsync();
             return true;
@@ -69,6 +57,5 @@ public class ClinicServicesService(AppDbContext db, ImageUploads images)
         return true;
     }
 
-    private async Task<Category> LoadCategoryAsync(CategoryDto? category) =>
-        (await db.Categories.LoadAllByIdAsync([category?.Id ?? Guid.Empty], "A categoria selecionada não existe mais. Recarregue a página e tente novamente.")).Single();
+    private static Money? PriceOf(ServiceDto dto) => dto.Price is { } amount ? new Money(amount, dto.Currency) : null;
 }

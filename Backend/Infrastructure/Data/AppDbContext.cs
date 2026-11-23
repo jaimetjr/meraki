@@ -8,9 +8,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Service> Services => Set<Service>();
     public DbSet<Therapist> Therapists => Set<Therapist>();
     public DbSet<Course> Courses => Set<Course>();
-    public DbSet<Category> Categories => Set<Category>();
-    public DbSet<Benefit> Benefits => Set<Benefit>();
-    public DbSet<Specialty> Specialties => Set<Specialty>();
     public DbSet<Testimonial> Testimonials => Set<Testimonial>();
     public DbSet<User> Users => Set<User>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -25,17 +22,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<Service>().HasQueryFilter(e => e.IsActive);
         modelBuilder.Entity<Therapist>().HasQueryFilter(e => e.IsActive);
         modelBuilder.Entity<Course>().HasQueryFilter(e => e.IsActive);
-        modelBuilder.Entity<Category>().HasQueryFilter(e => e.IsActive);
-        modelBuilder.Entity<Benefit>().HasQueryFilter(e => e.IsActive);
-        modelBuilder.Entity<Specialty>().HasQueryFilter(e => e.IsActive);
         modelBuilder.Entity<Testimonial>().HasQueryFilter(e => e.IsActive);
 
         ConfigureAuditFor<Service>(modelBuilder);
         ConfigureAuditFor<Therapist>(modelBuilder);
         ConfigureAuditFor<Course>(modelBuilder);
-        ConfigureAuditFor<Category>(modelBuilder);
-        ConfigureAuditFor<Benefit>(modelBuilder);
-        ConfigureAuditFor<Specialty>(modelBuilder);
         ConfigureAuditFor<Testimonial>(modelBuilder);
     }
 

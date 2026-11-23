@@ -1,9 +1,6 @@
 using API.Features.Auth;
-using API.Features.Benefits;
-using API.Features.Categories;
 using API.Features.Courses;
 using API.Features.Services;
-using API.Features.Specialties;
 using API.Features.Testimonials;
 using API.Features.Therapists;
 using API.Features.Users;
@@ -26,8 +23,8 @@ public static class ServiceRegistration
         services.AddDbContext<AppDbContext>((provider, options) => options
             .UseNpgsql(connectionString)
             .AddInterceptors(new AuditInterceptor(provider.GetRequiredService<ICurrentUser>()))
-            // Service→Category is required while Category has a soft-delete filter; deleting a
-            // category in use is blocked (409), so the filtered-required case cannot arise.
+            // Therapist↔Service links point at soft-deletable rows on both sides; the query filters
+            // hiding a deleted service or therapist from the other's list is exactly what we want.
             .ConfigureWarnings(w => w.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning)));
 
         // Features (one line per feature)
@@ -36,9 +33,6 @@ public static class ServiceRegistration
         services.AddScoped<TherapistService>();
         services.AddScoped<ClinicServicesService>();
         services.AddScoped<CourseService>();
-        services.AddScoped<CategoryService>();
-        services.AddScoped<BenefitService>();
-        services.AddScoped<SpecialtyService>();
         services.AddScoped<TestimonialService>();
 
         services.AddFileStorage(configuration, environment);

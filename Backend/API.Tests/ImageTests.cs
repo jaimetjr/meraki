@@ -18,7 +18,7 @@ public class ImageTests(ApiFactory api)
 
     private sealed record Resource(string Url, string ImageField, Func<MultipartFormDataContent> Form);
 
-    private async Task<Resource> ResourceAsync(string name, HttpClient client)
+    private static Resource ResourceFor(string name)
     {
         switch (name)
         {
@@ -26,10 +26,8 @@ public class ImageTests(ApiFactory api)
                 return new("/api/therapists", "image", () => Http.Form(
                     ("Name", Http.Unique("T")), ("Bio", "Bio"), ("Experience", "1"), ("Education", "E")));
             case "services":
-                var categoryId = await client.CreateAndGetId("/api/categories", new { name = Http.Unique("Cat") });
                 return new("/api/services", "image", () => Http.Form(
-                    ("Name", Http.Unique("S")), ("Description", "D"), ("Price", "10"), ("Currency", "BRL"),
-                    ("category", JsonSerializer.Serialize(new { id = categoryId }))));
+                    ("Name", Http.Unique("S")), ("Description", "D"), ("Price", "10"), ("Currency", "BRL")));
             case "courses":
                 return new("/api/courses", "image", () => Http.Form(
                     ("Title", Http.Unique("C")), ("Description", "D"), ("Instructor", "Ana"), ("Type", "Curso"), ("Status", "Disponivel")));
@@ -66,7 +64,7 @@ public class ImageTests(ApiFactory api)
     public async Task Uploaded_image_is_stored_and_served(string name)
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var resource = await ResourceAsync(name, client);
+        var resource = ResourceFor(name);
 
         var (_, imageUrl) = await CreateWithImage(client, resource);
 
@@ -85,7 +83,7 @@ public class ImageTests(ApiFactory api)
     public async Task Editing_without_a_file_keeps_the_image(string name)
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var resource = await ResourceAsync(name, client);
+        var resource = ResourceFor(name);
         var (id, imageUrl) = await CreateWithImage(client, resource);
 
         var update = await client.PutAsync($"{resource.Url}/{id}", resource.Form());
@@ -103,7 +101,7 @@ public class ImageTests(ApiFactory api)
     public async Task Replacing_the_image_deletes_the_old_file(string name)
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var resource = await ResourceAsync(name, client);
+        var resource = ResourceFor(name);
         var (id, oldUrl) = await CreateWithImage(client, resource);
 
         var update = await client.PutAsync($"{resource.Url}/{id}", WithFile(resource.Form(), Png, "new.png"));
@@ -119,7 +117,7 @@ public class ImageTests(ApiFactory api)
     public async Task Remove_image_clears_it_and_deletes_the_file()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var resource = await ResourceAsync("therapists", client);
+        var resource = ResourceFor("therapists");
         var (id, oldUrl) = await CreateWithImage(client, resource);
         var form = resource.Form();
         form.Add(new StringContent("true"), "removeImage");
@@ -137,7 +135,7 @@ public class ImageTests(ApiFactory api)
     public async Task Unsupported_file_types_are_rejected(string fileName, string contentType)
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var resource = await ResourceAsync("therapists", client);
+        var resource = ResourceFor("therapists");
 
         var response = await client.PostAsync(resource.Url, WithFile(resource.Form(), Png, fileName, contentType));
 
@@ -149,7 +147,7 @@ public class ImageTests(ApiFactory api)
     public async Task A_file_whose_content_is_not_an_image_is_rejected_even_with_an_image_name()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var resource = await ResourceAsync("therapists", client);
+        var resource = ResourceFor("therapists");
 
         var response = await client.PostAsync(resource.Url,
             WithFile(resource.Form(), "<html><script>alert(1)</script></html>"u8.ToArray(), "photo.png"));
@@ -162,7 +160,7 @@ public class ImageTests(ApiFactory api)
     public async Task Images_larger_than_5_MB_are_rejected()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var resource = await ResourceAsync("therapists", client);
+        var resource = ResourceFor("therapists");
         var big = new byte[5 * 1024 * 1024 + 1];
         Png.CopyTo(big, 0);
 
@@ -176,7 +174,7 @@ public class ImageTests(ApiFactory api)
     public async Task Testimonial_without_a_photo_is_allowed()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var resource = await ResourceAsync("testimonials", client);
+        var resource = ResourceFor("testimonials");
 
         var created = await (await client.PostAsync(resource.Url, resource.Form())).Json();
 

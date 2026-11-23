@@ -20,9 +20,4 @@ describe('ServicesService', () => {
     service.list().subscribe();
     httpMock.expectOne(`${environment.apiBaseUrl}/services`).flush([]);
   });
-
-  it('filters by category using the category route with the name encoded', () => {
-    service.getByCategory('Terapia Integrativa').subscribe();
-    httpMock.expectOne(`${environment.apiBaseUrl}/services/category/Terapia%20Integrativa`).flush([]);
-  });
 });

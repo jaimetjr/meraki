@@ -7,14 +7,11 @@ namespace API.Tests;
 public class AuthorizationTests(ApiFactory api)
 {
     [Theory]
-    [InlineData("POST", "/api/categories")]
-    [InlineData("POST", "/api/benefits")]
-    [InlineData("POST", "/api/specialties")]
     [InlineData("POST", "/api/therapists")]
     [InlineData("POST", "/api/services")]
     [InlineData("POST", "/api/courses")]
     [InlineData("POST", "/api/testimonials")]
-    [InlineData("PUT", "/api/categories/00000000-0000-0000-0000-000000000001")]
+    [InlineData("PUT", "/api/services/00000000-0000-0000-0000-000000000001")]
     [InlineData("DELETE", "/api/therapists/00000000-0000-0000-0000-000000000001")]
     [InlineData("GET", "/api/users")]
     [InlineData("POST", "/api/users")]
@@ -40,9 +37,6 @@ public class AuthorizationTests(ApiFactory api)
     }
 
     [Theory]
-    [InlineData("/api/categories")]
-    [InlineData("/api/benefits")]
-    [InlineData("/api/specialties")]
     [InlineData("/api/therapists")]
     [InlineData("/api/services")]
     [InlineData("/api/courses")]

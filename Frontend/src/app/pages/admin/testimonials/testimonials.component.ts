@@ -118,10 +118,11 @@ export class TestimonialsComponent implements OnInit {
 
     (request as Observable<unknown>).subscribe({
       next: () => {
+        // Before cancelEdit(), which clears editingId.
+        const action = this.editingId() ? 'atualizado' : 'criado';
         this.saving.set(false);
         this.cancelEdit();
         this.loadAll();
-        const action = this.editingId() ? 'atualizado' : 'criado';
         this.toastService.showSuccess(`Depoimento ${action} com sucesso!`);
       },
       error: (err) => {

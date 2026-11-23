@@ -7,10 +7,11 @@ namespace API.Features.Therapists;
 
 public class TherapistService(AppDbContext db, ImageUploads images)
 {
-    private const string SpecialtyNotFound =
-        "Uma das especialidades selecionadas não existe mais. Recarregue a página e tente novamente.";
+    private const string ServiceNotFound =
+        "Um dos serviços selecionados não existe mais. Recarregue a página e tente novamente.";
 
-    private IQueryable<Therapist> Therapists => db.Therapists.Include(t => t.Specialties);
+    // The query filter hides deleted services from this list too.
+    private IQueryable<Therapist> Therapists => db.Therapists.Include(t => t.Services);
 
     public async Task<List<TherapistDto>> GetAllAsync() =>
         (await Therapists.AsNoTracking().OrderByDescending(t => t.CreatedAt).ToListAsync()).ConvertAll(t => t.ToDto());
@@ -18,16 +19,11 @@ public class TherapistService(AppDbContext db, ImageUploads images)
     public async Task<TherapistDto?> GetByIdAsync(Guid id) =>
         (await Therapists.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id))?.ToDto();
 
-    public async Task<List<TherapistDto>> FindBySpecialtyAsync(string specialtyName) =>
-        (await Therapists.AsNoTracking()
-            .Where(t => t.Specialties.Any(s => s.Name == specialtyName))
-            .ToListAsync()).ConvertAll(t => t.ToDto());
-
     public Task<TherapistDto> CreateAsync(TherapistDto dto, IFormFile? image = null) =>
         images.SaveWithAsync(null, image, removeImage: false, "therapists", async imageUrl =>
         {
             var therapist = new Therapist(dto.Name, dto.Bio, imageUrl, dto.Experience, dto.Education, dto.ProId);
-            therapist.SetSpecialties(await db.Specialties.LoadAllByIdAsync(dto.Specialties?.Select(s => s.Id), SpecialtyNotFound));
+            therapist.SetServices(await db.Services.LoadAllByIdAsync(dto.Services?.Select(s => s.Id), ServiceNotFound));
 
             db.Therapists.Add(therapist);
             await db.SaveChangesAsync();
@@ -42,8 +38,8 @@ public class TherapistService(AppDbContext db, ImageUploads images)
         return await images.SaveWithAsync(therapist.Image, image, removeImage, "therapists", async imageUrl =>
         {
             therapist.Update(dto.Name, dto.Bio, imageUrl, dto.Experience, dto.Education, dto.ProId);
-            if (dto.Specialties != null)
-                therapist.SetSpecialties(await db.Specialties.LoadAllByIdAsync(dto.Specialties.Select(s => s.Id), SpecialtyNotFound));
+            if (dto.Services != null)
+                therapist.SetServices(await db.Services.LoadAllByIdAsync(dto.Services.Select(s => s.Id), ServiceNotFound));
 
             await db.SaveChangesAsync();
             return true;

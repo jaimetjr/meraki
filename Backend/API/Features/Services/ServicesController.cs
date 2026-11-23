@@ -17,9 +17,6 @@ public class ServicesController(ClinicServicesService service) : ControllerBase
         return result == null ? NotFound() : Ok(result);
     }
 
-    [HttpGet("category/{category}")]
-    public async Task<IActionResult> GetByCategory(string category) => Ok(await service.GetByCategoryAsync(category));
-
     [HttpPost]
     [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<IActionResult> Create([FromForm] ServiceDto dto, IFormFile? image = null)

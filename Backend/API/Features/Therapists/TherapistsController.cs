@@ -17,9 +17,6 @@ public class TherapistsController(TherapistService service) : ControllerBase
         return result == null ? NotFound() : Ok(result);
     }
 
-    [HttpGet("specialty/{name}")]
-    public async Task<IActionResult> FindBySpecialty(string name) => Ok(await service.FindBySpecialtyAsync(name));
-
     [HttpPost]
     [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<IActionResult> Create([FromForm] TherapistDto dto, IFormFile? image = null)

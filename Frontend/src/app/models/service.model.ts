@@ -1,15 +1,17 @@
-import type { Category } from "./category.model";
-import type { Benefit } from "./benefit.model";
+import type { IdName } from "./id-name.model";
 
 export interface Service {
   id?: string;
   name: string;
   description: string;
   image?: string | null;
-  longDescription: string;
-  duration: string;
-  price: number;
+  longDescription?: string | null;
+  duration?: string | null;
+  /** Null when the clinic doesn't publish a price ("sob consulta"). */
+  price: number | null;
   currency: string;
-  category?: Category;
-  benefits: Benefit[];
+  /** One short sentence each, in the order the admin typed them. */
+  benefits: string[];
+  /** Who offers this service (read-only; set from the therapist's form). */
+  therapists: IdName[];
 }

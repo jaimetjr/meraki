@@ -22,18 +22,12 @@ public class ErrorHandlingTests(ApiFactory api)
     private static IEnumerable<string> ErrorKeys(JsonElement problem) =>
         problem.GetProperty("errors").EnumerateObject().Select(p => p.Name.ToLowerInvariant());
 
-    private async Task<(Guid Id, string Name)> NewCategory(HttpClient client)
-    {
-        var name = Http.Unique("Cat");
-        return (await client.CreateAndGetId("/api/categories", new { name }), name);
-    }
-
     [Fact]
     public async Task Validation_errors_return_problem_details_keyed_by_field()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
 
-        var response = await client.PostAsJsonAsync("/api/categories", new { name = "" });
+        var response = await client.PostAsync("/api/services", Http.Form(("Name", ""), ("Description", "Desc")));
 
         var problem = await AssertProblem(response, HttpStatusCode.BadRequest);
         Assert.Contains("name", ErrorKeys(problem));
@@ -42,9 +36,12 @@ public class ErrorHandlingTests(ApiFactory api)
     [Fact]
     public async Task Validation_errors_explain_the_problem_in_portuguese_using_the_form_field_name()
     {
-        var client = await api.ClientAsAsync(UserRole.Admin);
+        var client = await api.ClientAsAsync(UserRole.SuperAdmin);
 
-        var response = await client.PostAsJsonAsync("/api/categories", new { name = "" });
+        // A JSON body: an empty field in a multipart form is rejected by MVC's implicit [Required] before
+        // validation runs (no "detail"), so the multipart endpoints can't show this message.
+        var response = await client.PostAsJsonAsync("/api/users",
+            new { email = $"new-{Guid.NewGuid():N}@test.local", password = "Another-Passw0rd!", firstName = "", role = "Admin" });
 
         // The admin shows "detail" as it is, so it must be a sentence the clinic staff understands.
         var problem = await AssertProblem(response, HttpStatusCode.BadRequest);
@@ -55,12 +52,10 @@ public class ErrorHandlingTests(ApiFactory api)
     public async Task Text_longer_than_its_database_column_is_a_400_not_a_crash()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var (categoryId, categoryName) = await NewCategory(client);
 
         var response = await client.PostAsync("/api/services", Http.Form(
             ("Name", Http.Unique("Svc")), ("Description", "Desc"), ("Price", "10"), ("Currency", "BRL"),
-            ("LongDescription", new string('x', 1001)),
-            ("category", JsonSerializer.Serialize(new { id = categoryId, name = categoryName }))));
+            ("LongDescription", new string('x', 1001))));
 
         var problem = await AssertProblem(response, HttpStatusCode.BadRequest);
         Assert.Contains("longdescription", ErrorKeys(problem));
@@ -96,11 +91,9 @@ public class ErrorHandlingTests(ApiFactory api)
     public async Task Decimal_form_values_are_parsed_independently_of_server_culture()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
-        var (categoryId, categoryName) = await NewCategory(client);
 
         var response = await client.PostAsync("/api/services", Http.Form(
-            ("Name", Http.Unique("Svc")), ("Description", "Desc"), ("Price", "150.5"), ("Currency", "BRL"),
-            ("category", JsonSerializer.Serialize(new { id = categoryId, name = categoryName }))));
+            ("Name", Http.Unique("Svc")), ("Description", "Desc"), ("Price", "150.5"), ("Currency", "BRL")));
 
         var id = (await response.Json()).Id();
         var service = await api.CreateClient().GetJson($"/api/services/{id}");
@@ -114,22 +107,36 @@ public class ErrorHandlingTests(ApiFactory api)
 
         var response = await client.PostAsync("/api/services", Http.Form(
             ("Name", Http.Unique("Svc")), ("Description", "Desc"), ("Price", "10"), ("Currency", "BRL"),
-            ("category", "not-json")));
+            ("benefits", "not-json")));
 
         var problem = await AssertProblem(response, HttpStatusCode.BadRequest);
-        Assert.Contains("category", ErrorKeys(problem));
+        Assert.Contains("benefits", ErrorKeys(problem));
     }
 
     [Fact]
-    public async Task Service_with_an_unknown_category_is_a_400()
+    public async Task A_benefit_longer_than_its_limit_is_a_400_with_a_message_for_the_staff()
     {
         var client = await api.ClientAsAsync(UserRole.Admin);
 
         var response = await client.PostAsync("/api/services", Http.Form(
-            ("Name", Http.Unique("Svc")), ("Description", "Desc"), ("Price", "10"), ("Currency", "BRL"),
-            ("category", JsonSerializer.Serialize(new { id = Guid.NewGuid(), name = "Ghost" }))));
+            ("Name", Http.Unique("Svc")), ("Description", "Desc"),
+            ("benefits", JsonSerializer.Serialize(new[] { "Relaxamento", new string('x', 101) }))));
 
-        await AssertProblem(response, HttpStatusCode.BadRequest);
+        var problem = await AssertProblem(response, HttpStatusCode.BadRequest);
+        Assert.Equal("Cada benefício deve ter no máximo 100 caracteres.", problem.GetProperty("detail").GetString());
+    }
+
+    [Fact]
+    public async Task More_benefits_than_the_limit_is_a_400_with_a_message_for_the_staff()
+    {
+        var client = await api.ClientAsAsync(UserRole.Admin);
+
+        var response = await client.PostAsync("/api/services", Http.Form(
+            ("Name", Http.Unique("Svc")), ("Description", "Desc"),
+            ("benefits", JsonSerializer.Serialize(Enumerable.Range(1, 21).Select(i => $"Benefício {i}")))));
+
+        var problem = await AssertProblem(response, HttpStatusCode.BadRequest);
+        Assert.Equal("Um serviço pode ter no máximo 20 benefícios.", problem.GetProperty("detail").GetString());
     }
 
     [Fact]

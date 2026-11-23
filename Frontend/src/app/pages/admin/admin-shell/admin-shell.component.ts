@@ -9,9 +9,6 @@ const NAV_ITEMS = [
   { path: "/admin/services", label: "Serviços" },
   { path: "/admin/courses", label: "Cursos" },
   { path: "/admin/therapists", label: "Terapeutas" },
-  { path: "/admin/categories", label: "Categorias" },
-  { path: "/admin/benefits", label: "Benefícios" },
-  { path: "/admin/specialties", label: "Especialidades" },
   { path: "/admin/testimonials", label: "Depoimentos" },
   { path: "/admin/messages", label: "Mensagens" },
 ];

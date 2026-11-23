@@ -10,6 +10,7 @@ describe('TestimonialsComponent (admin)', () => {
   let fixture: ComponentFixture<TestimonialsComponent>;
   let component: TestimonialsComponent;
   let testimonialsService: MockedObject<Pick<TestimonialsService, 'list' | 'create' | 'update' | 'delete'>>;
+  let toast: MockedObject<Pick<ToastService, 'showSuccess' | 'showError'>>;
 
   const existing: Testimonial = {
     id: 't1', authorName: 'Juliana', authorAvatarUrl: 'https://cdn.test/juliana.png', rating: 5, content: 'Ótimo',
@@ -25,18 +26,27 @@ describe('TestimonialsComponent (admin)', () => {
     testimonialsService.list.mockReturnValue(of([existing]));
     testimonialsService.create.mockReturnValue(of(existing));
     testimonialsService.update.mockReturnValue(of(void 0));
+    toast = { showSuccess: vi.fn(), showError: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [TestimonialsComponent],
       providers: [
         { provide: TestimonialsService, useValue: testimonialsService },
-        { provide: ToastService, useValue: { showSuccess: vi.fn(), showError: vi.fn() } },
+        { provide: ToastService, useValue: toast },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TestimonialsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('says "atualizado" after saving an edit', () => {
+    component.startEdit(existing);
+
+    component.submit();
+
+    expect(toast.showSuccess).toHaveBeenCalledWith('Depoimento atualizado com sucesso!');
   });
 
   it('creates a testimonial without a photo (the photo is optional)', () => {

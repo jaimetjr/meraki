@@ -6,7 +6,7 @@ Website and admin panel for **Meraki Saúde Integrativa**, an integrative health
 
 - **Public site:** home (mission, therapists, services, testimonials, FAQ), courses (`/cursos`), and a contact form that reaches the clinic by e-mail and in the admin inbox.
 - **Admin panel (`/admin`):**
-  - manage services, courses, therapists, categories, benefits, specialties and testimonials, with image uploads;
+  - manage services (with their benefits), the services each therapist offers, courses and testimonials, with image uploads;
   - read contact messages;
   - manage users (SuperAdmin only).
 - **REST API:** serves both, with JWT auth and the `Admin` / `SuperAdmin` roles.

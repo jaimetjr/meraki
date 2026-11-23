@@ -29,9 +29,9 @@ namespace Infrastructure.Configuration.EntityConfigurations
             builder.Property(t => t.ProId)
                 .HasMaxLength(Therapist.ProIdMaxLength);
 
-            builder.HasMany(t => t.Specialties)
-                .WithMany()
-                .UsingEntity(j => j.ToTable("SpecialtyTherapist"));
+            builder.HasMany(t => t.Services)
+                .WithMany(s => s.Therapists)
+                .UsingEntity(j => j.ToTable("TherapistServices"));
 
             builder.Property(t => t.IsActive)
                 .IsRequired()

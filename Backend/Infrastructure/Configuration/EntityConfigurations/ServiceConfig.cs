@@ -31,28 +31,16 @@ namespace Infrastructure.Configuration.EntityConfigurations
             builder.Property(s => s.Duration)
                 .HasMaxLength(Service.DurationMaxLength);
 
+            // Optional ("sob consulta"): both columns are null when there is no price.
             builder.OwnsOne(s => s.Price, price =>
             {
                 price.Property(p => p.Amount).HasColumnName("PriceAmount").IsRequired();
                 price.Property(p => p.Currency).HasColumnName("PriceCurrency").IsRequired();
             });
 
-            builder.HasOne(s => s.Category)
-                .WithMany()
-                .HasForeignKey(s => s.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasMany(s => s.Benefits)
-                    .WithMany(b => b.Services)
-                    .UsingEntity<Dictionary<string, object>>(
-                        "ServiceBenefit",
-                        j => j.HasOne<Benefit>().WithMany().HasForeignKey("BenefitId"),
-                        j => j.HasOne<Service>().WithMany().HasForeignKey("ServiceId"),
-                        j =>
-                        {
-                            j.HasKey("ServiceId", "BenefitId");
-                            j.ToTable("ServiceBenefit");
-                        });
+            // A PostgreSQL text[] column, in the order the admin typed them.
+            builder.Property(s => s.Benefits)
+                .IsRequired();
 
             builder.Property(s => s.IsActive)
                 .IsRequired()

@@ -1,10 +1,11 @@
 import { Component, type OnInit, type OnDestroy, inject, effect, ElementRef, ViewChild, AfterViewInit, ChangeDetectionStrategy } from "@angular/core"
 import { DialogService } from "../../services/dialog.service"
-import { ViewportScroller } from "@angular/common"
+import { CurrencyPipe, ViewportScroller } from "@angular/common"
 
 @Component({
   selector: "app-service-dialog",
   standalone: true,
+  imports: [CurrencyPipe],
   templateUrl: "./service-dialog.component.html",
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./service-dialog.component.css",
@@ -26,6 +27,11 @@ export class ServiceDialogComponent implements OnInit, OnDestroy, AfterViewInit 
 
   get service() {
     return this.dialogService.service$
+  }
+
+  /** "Quem atende": the therapists who offer this service, or "" when none are linked. */
+  therapistNames(): string {
+    return (this.service()?.therapists ?? []).map((t) => t.name).join(", ")
   }
 
   constructor() {

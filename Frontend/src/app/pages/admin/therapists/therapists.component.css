@@ -136,26 +136,31 @@ select:focus {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2315803d' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
 }
 
-select.multi-select {
-  background-image: none;
-  padding-right: 0.75rem;
-  min-height: 120px;
-  overflow-y: auto;
+.services-field {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.5rem 1rem;
 }
-
-select.multi-select option {
-  padding: 0.5rem 0.75rem;
+.services-field legend {
+  padding: 0 0.25rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+.service-option {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 400;
   cursor: pointer;
 }
-
-select.multi-select option:hover {
-  background-color: #f3f4f6;
-}
-
-select.multi-select option:checked {
-  background-color: #dcfce7;
-  color: #15803d;
-  font-weight: 600;
+.service-option input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  accent-color: #16a34a;
 }
 
 textarea {

@@ -6,19 +6,21 @@ namespace API.Tests;
 
 public class AuditTests(ApiFactory api)
 {
+    private static MultipartFormDataContent ServiceForm(string name) => Http.Form(("Name", name), ("Description", "Desc"));
+
     [Fact]
     public async Task Creating_content_records_the_author_and_an_audit_log_row()
     {
         var (adminId, email) = await api.CreateUserAsync(UserRole.Admin);
         var client = api.ClientWithToken(await api.LoginAsync(email, ApiFactory.Password));
 
-        var categoryId = await client.CreateAndGetId("/api/categories", new { name = Http.Unique("Audited") });
+        var serviceId = (await (await client.PostAsync("/api/services", ServiceForm(Http.Unique("Audited")))).Json()).Id();
 
         await using var db = api.CreateDbContext();
-        var category = await db.Categories.SingleAsync(c => c.Id == categoryId);
-        Assert.Equal(adminId, category.CreatedBy);
-        var log = await db.AuditLogs.SingleAsync(a => a.EntityId == categoryId);
-        Assert.Equal("Category", log.EntityType);
+        var service = await db.Services.SingleAsync(s => s.Id == serviceId);
+        Assert.Equal(adminId, service.CreatedBy);
+        var log = await db.AuditLogs.SingleAsync(a => a.EntityId == serviceId);
+        Assert.Equal("Service", log.EntityType);
         Assert.Equal("Create", log.Action);
         Assert.Equal(adminId, log.UserId);
     }
@@ -29,15 +31,14 @@ public class AuditTests(ApiFactory api)
         var (adminId, email) = await api.CreateUserAsync(UserRole.Admin);
         var client = api.ClientWithToken(await api.LoginAsync(email, ApiFactory.Password));
         var other = await api.ClientAsAsync(UserRole.SuperAdmin);
-        var categoryId = await other.CreateAndGetId("/api/categories", new { name = Http.Unique("Audited") });
+        var serviceId = (await (await other.PostAsync("/api/services", ServiceForm(Http.Unique("Audited")))).Json()).Id();
 
-        await client.PutAsync($"/api/categories/{categoryId}",
-            System.Net.Http.Json.JsonContent.Create(new { name = Http.Unique("Renamed") }));
+        await client.PutAsync($"/api/services/{serviceId}", ServiceForm(Http.Unique("Renamed")));
 
         await using var db = api.CreateDbContext();
-        var category = await db.Categories.SingleAsync(c => c.Id == categoryId);
-        Assert.Equal(adminId, category.UpdatedBy);
-        Assert.Contains(await db.AuditLogs.Where(a => a.EntityId == categoryId).ToListAsync(),
+        var service = await db.Services.SingleAsync(s => s.Id == serviceId);
+        Assert.Equal(adminId, service.UpdatedBy);
+        Assert.Contains(await db.AuditLogs.Where(a => a.EntityId == serviceId).ToListAsync(),
             a => a.Action == "Update" && a.UserId == adminId);
     }
 }

@@ -13,7 +13,7 @@ dotnet build meraki-api.sln
 dotnet run --project API                     # http://localhost:5063, Swagger UI at / in Development
 dotnet test --project API.Tests/API.Tests.csproj                                   # needs Docker running
 dotnet test --project API.Tests/API.Tests.csproj -- --filter-class "API.Tests.ContactTests"
-dotnet test --project API.Tests/API.Tests.csproj -- --filter-method "*Removing_a_benefit*"
+dotnet test --project API.Tests/API.Tests.csproj -- --filter-method "*Removing_a_service*"
 
 dotnet ef migrations add <Name> --project Infrastructure --startup-project API
 dotnet ef database update --project Infrastructure --startup-project API
@@ -105,9 +105,12 @@ Cross-cutting rules:
 - **Errors:** `ApiExceptionHandler` maps `DomainException` → 400, `ConflictException` → 409 and `AuthenticationFailedException` → 401, and anything else to a generic 500 that never exposes exception text. Don't map `UnauthorizedAccessException`: .NET also throws it for file-permission errors, and a 401 makes the frontend log the user out. All errors are ProblemDetails. Throw these exceptions from services; never write try/catch in controllers.
 - **Error messages are pt-BR and shown as they are.** The admin's `errorInterceptor` puts a 4xx response's `detail` in `userMessage`, and pages display it in their toast. So write `DomainException`/`ConflictException` messages as sentences for the clinic staff, never with ids or C# names; domain guards use "O campo X …". Responses with no `detail` (model-binding errors, 5xx, network) get the frontend's generic text for their status.
 - **Validation:** `ValidationFilter` runs the `IValidator<T>` for every action argument automatically and joins the messages into `detail`. Validators are discovered from the API assembly. `FieldLabels.UseForValidationMessages()` switches FluentValidation to pt-BR and names fields by their form label ("'Nome' deve ser informado.").
-- **Multipart + JSON fields:** content endpoints take `[FromForm]` DTOs. Nested lists arrive as JSON strings in a form field (`category`, `benefits`, `specialties`) and are bound by `[ModelBinder(typeof(FormJsonModelBinder), Name = "...")]` plus `[ValidateNever]`. Only their ids are used, loaded with `QueryableExtensions.LoadAllByIdAsync`, which rejects unknown or soft-deleted ids with a 400.
-- **Relations are replaced, not merged:** `Therapist.SetSpecialties` and `Service.SetBenefits`. A null list on update keeps the current set; `[]` clears it.
-- **Soft delete:** EF global query filters (`IsActive`) on all content entities in `AppDbContext`. **Users are not filtered**: inactive users stay listed, DELETE deactivates, nobody can deactivate themselves or change their own role, and inactive users can't log in. Deleting a category still used by a service → 409.
+- **Multipart + JSON fields:** content endpoints take `[FromForm]` DTOs. Lists arrive as JSON strings in a form field, bound by `[ModelBinder(typeof(FormJsonModelBinder), Name = "...")]` plus `[ValidateNever]`:
+  - `services` on a therapist: `[{ "id": … }]`. Only the ids are used, loaded with `QueryableExtensions.LoadAllByIdAsync`, which rejects unknown or soft-deleted ids with a 400.
+  - `benefits` on a service: an array of strings, one per line the admin typed. They're stored as a PostgreSQL `text[]` column; `Service.SetBenefits` trims them and drops empty lines and repeats.
+- **Content model:** a therapist offers services (`Therapist.Services` ↔ `Service.Therapists`, join table `TherapistServices`). The site shows them on the therapist's card and as "Quem atende" in the service dialog. There are no categories, specialties or benefit records. A service's price is optional (null → "Sob consulta").
+- **Lists are replaced, not merged:** `Therapist.SetServices` and `Service.SetBenefits`. A null list on update keeps the current one; `[]` clears it.
+- **Soft delete:** EF global query filters (`IsActive`) on all content entities in `AppDbContext`. **Users are not filtered**: inactive users stay listed, DELETE deactivates, nobody can deactivate themselves or change their own role, and inactive users can't log in. A deleted service disappears from its therapists' lists, and a deleted therapist from "Quem atende", through the same filters.
 - **Audit:** `AuditInterceptor` stamps `CreatedBy`/`UpdatedBy` and writes an `AuditLog` row with old/new JSON values for every `Entity` change. Entities marked `IHoldsPersonalData` (`ContactMessage`) get the action logged but never their values.
 - **Images:** `ImageUploads` is the single rule for every resource:
   - a new file replaces the image, and the old file is deleted after the DB save; if the save fails, the new upload is deleted instead (`ImageUploads.SaveWithAsync` wraps the entity build + save);
@@ -163,7 +166,9 @@ Cross-cutting rules:
 
 ## Known gaps / follow-ups
 
-- The 8 admin CRUD pages duplicate their load/delete/form/modal code and ~190-line CSS files; a shared base would remove most of it.
+- The 5 admin CRUD pages (services, courses, therapists, testimonials, users) duplicate their load/delete/form/modal code and ~190-line CSS files; a shared base would remove most of it.
+- An empty required field in a **multipart** form (therapists, services, courses, testimonials) is rejected by MVC's implicit `[Required]` before `ValidationFilter` runs, so the 400 has no `detail` and the admin shows its generic text. The admin forms check required fields first, so staff rarely see it.
+- The service dialog's backdrop uses `bg-opacity-50`, which Tailwind 4 removed, so it renders solid black (`bg-black/50` is the Tailwind 4 form).
 - `auth.interceptor.ts` logs the user out on 403 as well as 401.
 - `environment.prod.ts` uses Cloudflare's Turnstile **test** site key, which always passes. Replace it, together with the API's `Turnstile:SecretKey`, before the site is announced.
 - Production e-mail is `Email__Mode=Log` for now: Railway Hobby blocks SMTP, and Brevo's HTTPS API is the planned replacement. The database and the images volume have no backups on Hobby.

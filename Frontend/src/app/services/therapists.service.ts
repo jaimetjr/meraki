@@ -17,10 +17,6 @@ export class TherapistsService {
     return this.http.get<Therapist>(`${this.baseUrl}/${id}`);
   }
 
-  getBySpecialty(name: string): Observable<Therapist[]> {
-    return this.http.get<Therapist[]>(`${this.baseUrl}/specialty/${name}`);
-  }
-
   create(payload: FormData): Observable<Therapist> {
     return this.http.post<Therapist>(this.baseUrl, payload);
   }
