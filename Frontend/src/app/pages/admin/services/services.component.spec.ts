@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { ServicesComponent } from './services.component';
@@ -10,7 +11,7 @@ import type { Service } from '../../../models/service.model';
 describe('ServicesComponent (admin)', () => {
   let fixture: ComponentFixture<ServicesComponent>;
   let component: ServicesComponent;
-  let servicesService: jasmine.SpyObj<ServicesService>;
+  let servicesService: MockedObject<Pick<ServicesService, 'list' | 'create' | 'update' | 'delete'>>;
 
   const category = { id: 'c1', name: 'Terapias' };
   const existing: Service = {
@@ -20,14 +21,23 @@ describe('ServicesComponent (admin)', () => {
   } as Service;
 
   beforeEach(async () => {
-    servicesService = jasmine.createSpyObj('ServicesService', ['list', 'create', 'update', 'delete']);
-    servicesService.list.and.returnValue(of([existing]));
-    servicesService.update.and.returnValue(of(void 0));
-    const categoriesService = jasmine.createSpyObj('CategoriesService', ['list']);
-    categoriesService.list.and.returnValue(of([category]));
-    const benefitsService = jasmine.createSpyObj('BenefitsService', ['list']);
+    servicesService = {
+      list: vi.fn().mockName('ServicesService.list'),
+      create: vi.fn().mockName('ServicesService.create'),
+      update: vi.fn().mockName('ServicesService.update'),
+      delete: vi.fn().mockName('ServicesService.delete')
+    };
+    servicesService.list.mockReturnValue(of([existing]));
+    servicesService.update.mockReturnValue(of(void 0));
+    const categoriesService = {
+      list: vi.fn().mockName('CategoriesService.list')
+    };
+    categoriesService.list.mockReturnValue(of([category]));
+    const benefitsService = {
+      list: vi.fn().mockName('BenefitsService.list')
+    };
     // The benefits list failed to load, so the dropdown has no options.
-    benefitsService.list.and.returnValue(throwError(() => new Error('network')));
+    benefitsService.list.mockReturnValue(throwError(() => new Error('network')));
 
     await TestBed.configureTestingModule({
       imports: [ServicesComponent],
@@ -35,7 +45,7 @@ describe('ServicesComponent (admin)', () => {
         { provide: ServicesService, useValue: servicesService },
         { provide: CategoriesService, useValue: categoriesService },
         { provide: BenefitsService, useValue: benefitsService },
-        { provide: ToastService, useValue: jasmine.createSpyObj('ToastService', ['showSuccess', 'showError', 'showWarning']) },
+        { provide: ToastService, useValue: { showSuccess: vi.fn(), showError: vi.fn(), showWarning: vi.fn() } },
       ],
     }).compileComponents();
 
@@ -50,7 +60,7 @@ describe('ServicesComponent (admin)', () => {
 
     component.submit();
 
-    const sent = servicesService.update.calls.mostRecent().args[1] as FormData;
+    const sent = servicesService.update.mock.lastCall![1] as FormData;
     const ids = (JSON.parse(sent.get('benefits') as string) as { id: string }[]).map((b) => b.id);
     expect(ids).toEqual(['b1', 'b2']);
   });

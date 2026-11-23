@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { TherapistsComponent } from './therapists.component';
@@ -10,8 +11,8 @@ import type { Therapist } from '../../../models/therapist.model';
 describe('TherapistsComponent (admin)', () => {
   let fixture: ComponentFixture<TherapistsComponent>;
   let component: TherapistsComponent;
-  let therapistsService: jasmine.SpyObj<TherapistsService>;
-  let consultorioME: jasmine.SpyObj<ConsultorioMEService>;
+  let therapistsService: MockedObject<Pick<TherapistsService, 'list' | 'create' | 'update' | 'delete'>>;
+  let consultorioME: MockedObject<Pick<ConsultorioMEService, 'getProfessionals'>>;
 
   const existing: Therapist = {
     id: 't1', name: 'Ana', bio: 'Bio', experience: '5 anos', education: 'USP', proId: 'pro-1',
@@ -19,14 +20,23 @@ describe('TherapistsComponent (admin)', () => {
   } as Therapist;
 
   beforeEach(async () => {
-    therapistsService = jasmine.createSpyObj('TherapistsService', ['list', 'create', 'update', 'delete']);
-    therapistsService.list.and.returnValue(of([existing]));
-    therapistsService.update.and.returnValue(of(void 0));
-    const specialtiesService = jasmine.createSpyObj('SpecialtiesService', ['list']);
+    therapistsService = {
+      list: vi.fn().mockName('TherapistsService.list'),
+      create: vi.fn().mockName('TherapistsService.create'),
+      update: vi.fn().mockName('TherapistsService.update'),
+      delete: vi.fn().mockName('TherapistsService.delete')
+    };
+    therapistsService.list.mockReturnValue(of([existing]));
+    therapistsService.update.mockReturnValue(of(void 0));
+    const specialtiesService = {
+      list: vi.fn().mockName('SpecialtiesService.list')
+    };
     // The specialties list failed to load, so the dropdown has no options.
-    specialtiesService.list.and.returnValue(throwError(() => new Error('network')));
-    consultorioME = jasmine.createSpyObj('ConsultorioMEService', ['getProfessionals']);
-    consultorioME.getProfessionals.and.returnValue(of([]));
+    specialtiesService.list.mockReturnValue(throwError(() => new Error('network')));
+    consultorioME = {
+      getProfessionals: vi.fn().mockName('ConsultorioMEService.getProfessionals')
+    };
+    consultorioME.getProfessionals.mockReturnValue(of([]));
 
     await TestBed.configureTestingModule({
       imports: [TherapistsComponent],
@@ -34,7 +44,7 @@ describe('TherapistsComponent (admin)', () => {
         { provide: TherapistsService, useValue: therapistsService },
         { provide: SpecialtiesService, useValue: specialtiesService },
         { provide: ConsultorioMEService, useValue: consultorioME },
-        { provide: ToastService, useValue: jasmine.createSpyObj('ToastService', ['showSuccess', 'showError', 'showWarning']) },
+        { provide: ToastService, useValue: { showSuccess: vi.fn(), showError: vi.fn(), showWarning: vi.fn() } },
       ],
     }).compileComponents();
 
@@ -49,7 +59,7 @@ describe('TherapistsComponent (admin)', () => {
 
     component.submit();
 
-    const sent = therapistsService.update.calls.mostRecent().args[1] as FormData;
+    const sent = therapistsService.update.mock.lastCall![1] as FormData;
     const ids = (JSON.parse(sent.get('specialties') as string) as { id: string }[]).map((s) => s.id);
     expect(ids).toEqual(['s1', 's2']);
   });
@@ -70,7 +80,7 @@ describe('TherapistsComponent (admin)', () => {
 
     component.submit();
 
-    const sent = therapistsService.update.calls.mostRecent().args[1] as FormData;
+    const sent = therapistsService.update.mock.lastCall![1] as FormData;
     expect(sent.get('proId')).toBe('pro-1');
   });
 });

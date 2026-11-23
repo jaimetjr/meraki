@@ -16,15 +16,17 @@ describe('CoursesComponent (public page)', () => {
   ];
 
   beforeEach(async () => {
-    const coursesService = jasmine.createSpyObj('CoursesService', ['list']);
-    coursesService.list.and.returnValue(of(courses));
+    const coursesService = {
+      list: vi.fn().mockName('CoursesService.list')
+    };
+    coursesService.list.mockReturnValue(of(courses));
 
     await TestBed.configureTestingModule({
       imports: [CoursesComponent],
       providers: [
         provideRouter([]),
         { provide: CoursesService, useValue: coursesService },
-        { provide: MetaService, useValue: jasmine.createSpyObj('MetaService', ['updateMetaTags', 'updateTitle', 'setMeta']) },
+        { provide: MetaService, useValue: { updateMetaTags: vi.fn(), updateTitle: vi.fn(), setMeta: vi.fn() } },
       ],
     }).compileComponents();
 

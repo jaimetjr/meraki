@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { TestimonialsComponent } from './testimonials.component';
@@ -8,23 +9,28 @@ import type { Testimonial } from '../../../models/testimonial.model';
 describe('TestimonialsComponent (admin)', () => {
   let fixture: ComponentFixture<TestimonialsComponent>;
   let component: TestimonialsComponent;
-  let testimonialsService: jasmine.SpyObj<TestimonialsService>;
+  let testimonialsService: MockedObject<Pick<TestimonialsService, 'list' | 'create' | 'update' | 'delete'>>;
 
   const existing: Testimonial = {
     id: 't1', authorName: 'Juliana', authorAvatarUrl: 'https://cdn.test/juliana.png', rating: 5, content: 'Ótimo',
   } as Testimonial;
 
   beforeEach(async () => {
-    testimonialsService = jasmine.createSpyObj('TestimonialsService', ['list', 'create', 'update', 'delete']);
-    testimonialsService.list.and.returnValue(of([existing]));
-    testimonialsService.create.and.returnValue(of(existing));
-    testimonialsService.update.and.returnValue(of(void 0));
+    testimonialsService = {
+      list: vi.fn().mockName('TestimonialsService.list'),
+      create: vi.fn().mockName('TestimonialsService.create'),
+      update: vi.fn().mockName('TestimonialsService.update'),
+      delete: vi.fn().mockName('TestimonialsService.delete')
+    };
+    testimonialsService.list.mockReturnValue(of([existing]));
+    testimonialsService.create.mockReturnValue(of(existing));
+    testimonialsService.update.mockReturnValue(of(void 0));
 
     await TestBed.configureTestingModule({
       imports: [TestimonialsComponent],
       providers: [
         { provide: TestimonialsService, useValue: testimonialsService },
-        { provide: ToastService, useValue: jasmine.createSpyObj('ToastService', ['showSuccess', 'showError']) },
+        { provide: ToastService, useValue: { showSuccess: vi.fn(), showError: vi.fn() } },
       ],
     }).compileComponents();
 
@@ -39,9 +45,9 @@ describe('TestimonialsComponent (admin)', () => {
 
     component.submit();
 
-    const sent = testimonialsService.create.calls.mostRecent().args[0] as FormData;
+    const sent = testimonialsService.create.mock.lastCall![0] as FormData;
     expect(sent.get('authorName')).toBe('Ana');
-    expect(sent.has('image')).toBeFalse();
+    expect(sent.has('image')).toBe(false);
   });
 
   it('edits a testimonial without sending an image, so the current photo is kept', () => {
@@ -51,8 +57,8 @@ describe('TestimonialsComponent (admin)', () => {
     component.submit();
 
     expect(testimonialsService.update).toHaveBeenCalled();
-    const sent = testimonialsService.update.calls.mostRecent().args[1] as FormData;
+    const sent = testimonialsService.update.mock.lastCall![1] as FormData;
     expect(sent.get('content')).toBe('Excelente');
-    expect(sent.has('image')).toBeFalse();
+    expect(sent.has('image')).toBe(false);
   });
 });

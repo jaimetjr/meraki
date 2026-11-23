@@ -29,8 +29,8 @@ Frontend (run from `Frontend/`):
 npm install
 npm start                                                     # http://localhost:4200, calls http://localhost:5063/api
 npx ng build                                                  # production
-npx ng test --watch=false --browsers=ChromeHeadless           # Karma + Jasmine
-npx ng test --watch=false --browsers=ChromeHeadless --include=src/app/services/contact.service.spec.ts
+npx ng test --watch=false                                     # Vitest, in Node with jsdom (no browser)
+npx ng test --watch=false --include=src/app/services/contact.service.spec.ts
 ```
 
 ## Deployment (Railway)
@@ -157,6 +157,9 @@ Cross-cutting rules:
 - `ImageOrInitialsComponent` renders an image, or the name's initials when it is missing or fails to load. Use it instead of `<img>`/`NgOptimizedImage` for API images, which can be null.
 - `TurnstileWidgetComponent` wraps Cloudflare Turnstile. Tokens are single-use, so call `reset()` after each submit.
 - Tailwind CSS 4 via `@tailwindcss/postcss`; the theme lives in `src/styles.css` (`@theme inline`). Tailwind 4 doesn't read `tailwind.config.*` files, so don't add one.
+- **Specs run on Vitest** (`@angular/build:unit-test`), in Node with jsdom. They build through the `testing` configuration in `angular.json`, which adds `zone.js/testing`.
+  - Mock services with `vi.fn()` object literals, typed `MockedObject<Pick<Service, 'method' | …>>`. A plain `MockedObject<Service>` also demands the service's private fields.
+  - `fakeAsync`/`tick` don't work under Vitest. Use `vi.useFakeTimers()` and `vi.advanceTimersByTime()`, as `error.interceptor.spec.ts` does.
 
 ## Known gaps / follow-ups
 
@@ -167,9 +170,6 @@ Cross-cutting rules:
 - The LGPD consent text should link to a privacy policy page, which doesn't exist yet.
 - The backend builds with zero warnings and no vulnerable packages; keep it that way (`dotnet list meraki-api.sln package --vulnerable --include-transitive`). The test project disables only `xUnit1051`.
 - The frontend has no `npm audit` findings; keep it that way. Upgrade Angular with `ng update`, one major version at a time.
-- **Frontend tests still run on Karma** (`@angular/build:karma`), which Angular 22 calls legacy.
-  - Karma itself is deprecated and pulls in deprecated `glob@7`/`rimraf@3`/`inflight` (test-only).
-  - The move is `ng update @angular/cli --name migrate-karma-to-vitest`, then rewriting the 12 specs' `jasmine.createSpyObj`/`.and.returnValue` calls.
 - **ConsultorioME integration is planned, not built.**
   - The admin Terapeutas dropdown saves `Therapist.ProId`, but nothing on the site uses it yet.
   - The dropdown is hidden while `environment.consultorioME` is `false` (both environment files). Turn it on only together with the API's `ConsultorioME:*` credentials.

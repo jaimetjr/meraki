@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MessagesComponent } from './messages.component';
@@ -8,7 +9,7 @@ import type { ContactMessage } from '../../../models/contact.model';
 describe('MessagesComponent (admin inbox)', () => {
   let fixture: ComponentFixture<MessagesComponent>;
   let component: MessagesComponent;
-  let contactService: jasmine.SpyObj<ContactService>;
+  let contactService: MockedObject<Pick<ContactService, 'list' | 'markRead' | 'delete'>>;
 
   const messages: ContactMessage[] = [
     { id: 'a', name: 'Ana', email: 'ana@example.com', phone: '1', service: 'Terapia', message: 'Oi', isRead: false, createdAt: '2026-11-20T10:00:00Z' },
@@ -16,16 +17,20 @@ describe('MessagesComponent (admin inbox)', () => {
   ];
 
   beforeEach(async () => {
-    contactService = jasmine.createSpyObj('ContactService', ['list', 'markRead', 'delete']);
-    contactService.list.and.returnValue(of(structuredClone(messages)));
-    contactService.markRead.and.returnValue(of(void 0));
-    contactService.delete.and.returnValue(of(void 0));
+    contactService = {
+      list: vi.fn().mockName('ContactService.list'),
+      markRead: vi.fn().mockName('ContactService.markRead'),
+      delete: vi.fn().mockName('ContactService.delete')
+    };
+    contactService.list.mockReturnValue(of(structuredClone(messages)));
+    contactService.markRead.mockReturnValue(of(void 0));
+    contactService.delete.mockReturnValue(of(void 0));
 
     await TestBed.configureTestingModule({
       imports: [MessagesComponent],
       providers: [
         { provide: ContactService, useValue: contactService },
-        { provide: ToastService, useValue: jasmine.createSpyObj('ToastService', ['showSuccess', 'showError']) },
+        { provide: ToastService, useValue: { showSuccess: vi.fn(), showError: vi.fn() } },
       ],
     }).compileComponents();
 
@@ -45,7 +50,7 @@ describe('MessagesComponent (admin inbox)', () => {
     component.toggleRead(component.messages()[0]);
 
     expect(contactService.markRead).toHaveBeenCalledWith('a', true);
-    expect(component.messages()[0].isRead).toBeTrue();
+    expect(component.messages()[0].isRead).toBe(true);
     expect(component.unreadCount()).toBe(0);
   });
 

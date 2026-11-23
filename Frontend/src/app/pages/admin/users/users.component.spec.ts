@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { UsersComponent } from './users.component';
@@ -9,26 +10,34 @@ import { UserRole, type User } from '../../../models/user.model';
 describe('UsersComponent (admin)', () => {
   let fixture: ComponentFixture<UsersComponent>;
   let component: UsersComponent;
-  let usersService: jasmine.SpyObj<UsersService>;
+  let usersService: MockedObject<Pick<UsersService, 'list' | 'create' | 'update' | 'delete' | 'updatePassword'>>;
 
   const inactive: User = { id: 'u1', email: 'admin@meraki.com', firstName: 'Admin', lastName: 'User', role: UserRole.Admin, isActive: false };
   const me: User = { id: 'me', email: 'superadmin@meraki.local', role: UserRole.SuperAdmin, isActive: true };
 
   beforeEach(async () => {
-    usersService = jasmine.createSpyObj('UsersService', ['list', 'create', 'update', 'delete', 'updatePassword']);
-    usersService.list.and.returnValue(of([inactive, me]));
-    usersService.update.and.returnValue(of(void 0));
-    usersService.create.and.returnValue(of(inactive));
-    usersService.updatePassword.and.returnValue(of(void 0));
-    const auth = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
-    auth.getCurrentUser.and.returnValue({ userId: 'me', email: me.email, role: 'SuperAdmin', token: 't', expiresAt: '2999-01-01' });
+    usersService = {
+      list: vi.fn().mockName('UsersService.list'),
+      create: vi.fn().mockName('UsersService.create'),
+      update: vi.fn().mockName('UsersService.update'),
+      delete: vi.fn().mockName('UsersService.delete'),
+      updatePassword: vi.fn().mockName('UsersService.updatePassword')
+    };
+    usersService.list.mockReturnValue(of([inactive, me]));
+    usersService.update.mockReturnValue(of(void 0));
+    usersService.create.mockReturnValue(of(inactive));
+    usersService.updatePassword.mockReturnValue(of(void 0));
+    const auth = {
+      getCurrentUser: vi.fn().mockName('AuthService.getCurrentUser')
+    };
+    auth.getCurrentUser.mockReturnValue({ userId: 'me', email: me.email, role: 'SuperAdmin', token: 't', expiresAt: '2999-01-01' });
 
     await TestBed.configureTestingModule({
       imports: [UsersComponent],
       providers: [
         { provide: UsersService, useValue: usersService },
         { provide: AuthService, useValue: auth },
-        { provide: ToastService, useValue: jasmine.createSpyObj('ToastService', ['showSuccess', 'showError', 'showWarning']) },
+        { provide: ToastService, useValue: { showSuccess: vi.fn(), showError: vi.fn(), showWarning: vi.fn() } },
       ],
     }).compileComponents();
 
@@ -52,7 +61,7 @@ describe('UsersComponent (admin)', () => {
     chooseOption('isActive', 'Ativo');
     component.submit();
 
-    const sent = usersService.update.calls.mostRecent().args[1];
+    const sent = usersService.update.mock.lastCall![1];
     expect(sent.isActive).toBe(true);
   });
 
@@ -101,7 +110,7 @@ describe('UsersComponent (admin)', () => {
     chooseOption('isActive', 'Inativo');
     component.submit();
 
-    const sent = usersService.update.calls.mostRecent().args[1];
+    const sent = usersService.update.mock.lastCall![1];
     expect(sent.isActive).toBe(false);
   });
 
@@ -113,30 +122,30 @@ describe('UsersComponent (admin)', () => {
     component.startEdit(me);
     fixture.detectChanges();
 
-    expect(select('role').disabled).toBeTrue();
-    expect(select('isActive').disabled).toBeTrue();
+    expect(select('role').disabled).toBe(true);
+    expect(select('isActive').disabled).toBe(true);
     expect(fixture.nativeElement.textContent).toContain('Você não pode alterar seu próprio papel');
 
     component.form.patchValue({ firstName: 'Jaime' });
     component.submit();
-    const sent = usersService.update.calls.mostRecent().args[1];
+    const sent = usersService.update.mock.lastCall![1];
     expect(sent.firstName).toBe('Jaime');
-    expect('role' in sent).toBeFalse();
-    expect('isActive' in sent).toBeFalse();
+    expect('role' in sent).toBe(false);
+    expect('isActive' in sent).toBe(false);
   });
 
   it('unlocks Papel and Status again when you then edit someone else or create a user', () => {
     component.startEdit(me);
     component.startEdit(inactive);
     fixture.detectChanges();
-    expect(select('role').disabled).toBeFalse();
-    expect(select('isActive').disabled).toBeFalse();
+    expect(select('role').disabled).toBe(false);
+    expect(select('isActive').disabled).toBe(false);
 
     component.startEdit(me);
     component.cancelEdit();
     component.startCreate();
     fixture.detectChanges();
-    expect(select('role').disabled).toBeFalse();
+    expect(select('role').disabled).toBe(false);
   });
 
   it('disables Excluir on your own row only', () => {
@@ -144,7 +153,7 @@ describe('UsersComponent (admin)', () => {
     const deleteButton = (email: string) =>
       rows.find((r) => r.textContent?.includes(email))!.querySelector('.btn-danger') as HTMLButtonElement;
 
-    expect(deleteButton(me.email).disabled).toBeTrue();
-    expect(deleteButton(inactive.email).disabled).toBeFalse();
+    expect(deleteButton(me.email).disabled).toBe(true);
+    expect(deleteButton(inactive.email).disabled).toBe(false);
   });
 });

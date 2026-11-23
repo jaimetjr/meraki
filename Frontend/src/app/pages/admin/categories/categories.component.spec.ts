@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { CategoriesComponent } from './categories.component';
@@ -7,13 +8,22 @@ import { ToastService } from '../../../services/toast.service';
 describe('CategoriesComponent (admin)', () => {
   let fixture: ComponentFixture<CategoriesComponent>;
   let component: CategoriesComponent;
-  let categories: jasmine.SpyObj<CategoriesService>;
-  let toast: jasmine.SpyObj<ToastService>;
+  let categories: MockedObject<Pick<CategoriesService, 'list' | 'create' | 'update' | 'delete'>>;
+  let toast: MockedObject<Pick<ToastService, 'showSuccess' | 'showError' | 'showWarning'>>;
 
   beforeEach(async () => {
-    categories = jasmine.createSpyObj('CategoriesService', ['list', 'create', 'update', 'delete']);
-    categories.list.and.returnValue(of([{ id: 'c1', name: 'Terapia' }]));
-    toast = jasmine.createSpyObj('ToastService', ['showSuccess', 'showError', 'showWarning']);
+    categories = {
+      list: vi.fn().mockName('CategoriesService.list'),
+      create: vi.fn().mockName('CategoriesService.create'),
+      update: vi.fn().mockName('CategoriesService.update'),
+      delete: vi.fn().mockName('CategoriesService.delete')
+    };
+    categories.list.mockReturnValue(of([{ id: 'c1', name: 'Terapia' }]));
+    toast = {
+      showSuccess: vi.fn().mockName('ToastService.showSuccess'),
+      showError: vi.fn().mockName('ToastService.showError'),
+      showWarning: vi.fn().mockName('ToastService.showWarning')
+    };
 
     await TestBed.configureTestingModule({
       imports: [CategoriesComponent],
@@ -33,7 +43,7 @@ describe('CategoriesComponent (admin)', () => {
 
   it("tells the admin why a category can't be deleted", () => {
     const reason = 'Esta categoria é usada por 1 serviço(s). Mova-os para outra categoria antes de excluí-la.';
-    categories.delete.and.returnValue(rejected(reason));
+    categories.delete.mockReturnValue(rejected(reason));
 
     component.delete('c1');
 
@@ -43,7 +53,7 @@ describe('CategoriesComponent (admin)', () => {
 
   it("tells the admin why a category can't be saved", () => {
     const reason = "'Nome' deve ser menor ou igual a 100 caracteres.";
-    categories.create.and.returnValue(rejected(reason));
+    categories.create.mockReturnValue(rejected(reason));
     component.startCreate();
     component.form.patchValue({ name: 'Nova' });
 

@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { Component, input, output } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
@@ -22,8 +23,8 @@ class TurnstileWidgetStubComponent {
 describe('ContactFormComponent', () => {
   let component: ContactFormComponent;
   let fixture: ComponentFixture<ContactFormComponent>;
-  let contactService: jasmine.SpyObj<ContactService>;
-  let errorService: jasmine.SpyObj<ErrorService>;
+  let contactService: MockedObject<Pick<ContactService, 'send'>>;
+  let errorService: MockedObject<Pick<ErrorService, 'setError' | 'clearError'>>;
 
   const validMessage = {
     name: 'Test User',
@@ -35,10 +36,17 @@ describe('ContactFormComponent', () => {
   };
 
   beforeEach(async () => {
-    contactService = jasmine.createSpyObj('ContactService', ['send']);
-    errorService = jasmine.createSpyObj('ErrorService', ['setError', 'clearError']);
-    const servicesService = jasmine.createSpyObj('ServicesService', ['list']);
-    servicesService.list.and.returnValue(of([{ id: 's1', name: 'Terapia' }, { id: 's2', name: 'Mindfulness' }]));
+    contactService = {
+      send: vi.fn().mockName('ContactService.send')
+    };
+    errorService = {
+      setError: vi.fn().mockName('ErrorService.setError'),
+      clearError: vi.fn().mockName('ErrorService.clearError')
+    };
+    const servicesService = {
+      list: vi.fn().mockName('ServicesService.list')
+    };
+    servicesService.list.mockReturnValue(of([{ id: 's1', name: 'Terapia' }, { id: 's2', name: 'Mindfulness' }]));
 
     await TestBed.configureTestingModule({
       imports: [ContactFormComponent],
@@ -46,7 +54,7 @@ describe('ContactFormComponent', () => {
         { provide: ContactService, useValue: contactService },
         { provide: ServicesService, useValue: servicesService },
         { provide: ErrorService, useValue: errorService },
-        { provide: LoggingService, useValue: jasmine.createSpyObj('LoggingService', ['error', 'info']) },
+        { provide: LoggingService, useValue: { error: vi.fn(), info: vi.fn() } },
       ],
     })
       .overrideComponent(ContactFormComponent, {
@@ -65,17 +73,17 @@ describe('ContactFormComponent', () => {
 
   it('requires name, email, phone, service and consent', () => {
     const form = component.contactForm;
-    expect(form.get('name')?.hasError('required')).toBeTrue();
-    expect(form.get('email')?.hasError('required')).toBeTrue();
-    expect(form.get('phone')?.hasError('required')).toBeTrue();
-    expect(form.get('service')?.hasError('required')).toBeTrue();
-    expect(form.get('consent')?.hasError('required')).toBeTrue();
+    expect(form.get('name')?.hasError('required')).toBe(true);
+    expect(form.get('email')?.hasError('required')).toBe(true);
+    expect(form.get('phone')?.hasError('required')).toBe(true);
+    expect(form.get('service')?.hasError('required')).toBe(true);
+    expect(form.get('consent')?.hasError('required')).toBe(true);
   });
 
   it('validates the email format', () => {
     const email = component.contactForm.get('email');
     email?.setValue('invalid-email');
-    expect(email?.hasError('email')).toBeTrue();
+    expect(email?.hasError('email')).toBe(true);
     email?.setValue('valid@email.com');
     expect(email?.hasError('email')).toBeFalsy();
   });
@@ -90,30 +98,30 @@ describe('ContactFormComponent', () => {
     component.onSubmit();
 
     expect(contactService.send).not.toHaveBeenCalled();
-    expect(component.captchaMissing()).toBeTrue();
+    expect(component.captchaMissing()).toBe(true);
   });
 
   it('sends the message with consent and the captcha token', () => {
-    contactService.send.and.returnValue(of({ success: true, message: 'Enviado' }));
+    contactService.send.mockReturnValue(of({ success: true, message: 'Enviado' }));
     component.contactForm.patchValue(validMessage);
     widget().token.emit('captcha-token');
 
     component.onSubmit();
 
     expect(contactService.send).toHaveBeenCalledWith({ ...validMessage, captchaToken: 'captcha-token' });
-    expect(component.isSubmitted()).toBeTrue();
+    expect(component.isSubmitted()).toBe(true);
   });
 
   it('reports a failed submission, re-enables the form and asks for a new captcha', () => {
-    contactService.send.and.returnValue(throwError(() => ({ userMessage: 'Falhou' })));
+    contactService.send.mockReturnValue(throwError(() => ({ userMessage: 'Falhou' })));
     component.contactForm.patchValue(validMessage);
     widget().token.emit('captcha-token');
 
     component.onSubmit();
 
-    expect(errorService.setError).toHaveBeenCalledWith(jasmine.objectContaining({ message: 'Falhou', severity: 'error' }));
-    expect(component.isSubmitting()).toBeFalse();
-    expect(component.isSubmitted()).toBeFalse();
+    expect(errorService.setError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Falhou', severity: 'error' }));
+    expect(component.isSubmitting()).toBe(false);
+    expect(component.isSubmitted()).toBe(false);
     expect(widget().resetCount).toBe(1);
   });
 
@@ -128,7 +136,7 @@ describe('ContactFormComponent', () => {
 
     component.resetForm();
 
-    expect(component.isSubmitted()).toBeFalse();
+    expect(component.isSubmitted()).toBe(false);
     expect(component.contactForm.value.name).toBeNull();
     expect(errorService.clearError).toHaveBeenCalled();
   });

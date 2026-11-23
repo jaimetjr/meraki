@@ -71,7 +71,7 @@ Log in at `http://localhost:4200/admin/login` with the SuperAdmin you configured
 
 ```bash
 cd Backend && dotnet test --project API.Tests/API.Tests.csproj           # Docker must be running
-cd Frontend && npx ng test --watch=false --browsers=ChromeHeadless
+cd Frontend && npx ng test --watch=false
 ```
 
 ## Production configuration
