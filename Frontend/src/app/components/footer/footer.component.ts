@@ -8,6 +8,6 @@ import { Component, ChangeDetectionStrategy } from "@angular/core"
   styleUrl: "./footer.component.css",
 })
 export class FooterComponent {
-  logoUrl = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo_white-xcKcT0DDe9L3p9gP0dexj9UyBLPudv.jpeg"
+  logoUrl = "/logo-emblem.png"
   currentYear = new Date().getFullYear()
 }

@@ -8,7 +8,7 @@ import { Component, ChangeDetectionStrategy } from "@angular/core"
   styleUrl: "./maintenance.component.css",
 })
 export class MaintenanceComponent {
-  logoUrl = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo_white-xcKcT0DDe9L3p9gP0dexj9UyBLPudv.jpeg" // Using the provided image for now
+  logoUrl = "/logo.jpg"
 
   contactInfo = {
     phones: [

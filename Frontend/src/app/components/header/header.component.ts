@@ -14,7 +14,7 @@ import { filter, take } from "rxjs/operators"
 })
 export class HeaderComponent {
   isMenuOpen = false
-  logoUrl = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo_white-xcKcT0DDe9L3p9gP0dexj9UyBLPudv.jpeg"
+  logoUrl = "/logo-emblem.png"
   private router = inject(Router);
   private scroll = inject(ScrollService);
   

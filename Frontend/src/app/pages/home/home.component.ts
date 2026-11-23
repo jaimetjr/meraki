@@ -45,7 +45,7 @@ export class HomeComponent implements OnInit {
   therapists = signal<Therapist[]>([])
   services = signal<Service[]>([])
   testimonials = signal<Testimonial[]>([])
-  logoUrl = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo_white-xcKcT0DDe9L3p9gP0dexj9UyBLPudv.jpeg"
+  logoUrl = "/logo.jpg"
   isLoading = signal(true)
 
   ngOnInit(): void {
