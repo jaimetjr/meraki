@@ -11,9 +11,10 @@ describe('TherapistsComponent (admin)', () => {
   let fixture: ComponentFixture<TherapistsComponent>;
   let component: TherapistsComponent;
   let therapistsService: jasmine.SpyObj<TherapistsService>;
+  let consultorioME: jasmine.SpyObj<ConsultorioMEService>;
 
   const existing: Therapist = {
-    id: 't1', name: 'Ana', bio: 'Bio', experience: '5 anos', education: 'USP',
+    id: 't1', name: 'Ana', bio: 'Bio', experience: '5 anos', education: 'USP', proId: 'pro-1',
     specialties: [{ id: 's1', name: 'Ansiedade', description: '' }, { id: 's2', name: 'Trauma', description: '' }],
   } as Therapist;
 
@@ -24,7 +25,7 @@ describe('TherapistsComponent (admin)', () => {
     const specialtiesService = jasmine.createSpyObj('SpecialtiesService', ['list']);
     // The specialties list failed to load, so the dropdown has no options.
     specialtiesService.list.and.returnValue(throwError(() => new Error('network')));
-    const consultorioME = jasmine.createSpyObj('ConsultorioMEService', ['getProfessionals']);
+    consultorioME = jasmine.createSpyObj('ConsultorioMEService', ['getProfessionals']);
     consultorioME.getProfessionals.and.returnValue(of([]));
 
     await TestBed.configureTestingModule({
@@ -51,5 +52,25 @@ describe('TherapistsComponent (admin)', () => {
     const sent = therapistsService.update.calls.mostRecent().args[1] as FormData;
     const ids = (JSON.parse(sent.get('specialties') as string) as { id: string }[]).map((s) => s.id);
     expect(ids).toEqual(['s1', 's2']);
+  });
+
+  // The ConsultorioME integration is planned but switched off (environment.consultorioME).
+  it('does not call ConsultorioME or show its field while the integration is off', () => {
+    component.startEdit(existing);
+    fixture.detectChanges();
+
+    expect(consultorioME.getProfessionals).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('input[formcontrolname=name]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('select[formcontrolname=proId]')).toBeNull();
+  });
+
+  it('keeps the therapist\'s saved ConsultorioME id when editing while the integration is off', () => {
+    component.startEdit(existing);
+    component.form.patchValue({ bio: 'Nova bio' });
+
+    component.submit();
+
+    const sent = therapistsService.update.calls.mostRecent().args[1] as FormData;
+    expect(sent.get('proId')).toBe('pro-1');
   });
 });

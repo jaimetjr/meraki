@@ -8,4 +8,6 @@ export const environment = {
    * secret). Replace it with the real key from the Cloudflare dashboard before the site is announced.
    */
   turnstileSiteKey: "1x00000000000000000000AA",
+  /** ConsultorioME integration (planned). Turn on together with the API's ConsultorioME:* credentials. */
+  consultorioME: false,
 };

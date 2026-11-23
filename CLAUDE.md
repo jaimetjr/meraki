@@ -170,5 +170,8 @@ Cross-cutting rules:
 - **Frontend tests still run on Karma** (`@angular/build:karma`), which Angular 22 calls legacy.
   - Karma itself is deprecated and pulls in deprecated `glob@7`/`rimraf@3`/`inflight` (test-only).
   - The move is `ng update @angular/cli --name migrate-karma-to-vitest`, then rewriting the 12 specs' `jasmine.createSpyObj`/`.and.returnValue` calls.
-- `GET /api/consultoriome/professionals` returns 500 when `ConsultorioME:*` isn't configured, so the admin Terapeutas page shows "Erro interno do servidor" on load.
+- **ConsultorioME integration is planned, not built.**
+  - The admin Terapeutas dropdown saves `Therapist.ProId`, but nothing on the site uses it yet.
+  - The dropdown is hidden while `environment.consultorioME` is `false` (both environment files). Turn it on only together with the API's `ConsultorioME:*` credentials.
+  - Without the credentials, `GET /api/consultoriome/professionals` returns 500.
 - **R2 has only been tested against an S3 emulator.** Verify one upload and delete against the real bucket before going live.

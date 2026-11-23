@@ -14,6 +14,7 @@ import { ToastService } from "../../../services/toast.service";
 import type { Therapist } from "../../../models/therapist.model";
 import type { Specialty } from "../../../models/specialty.model";
 import { urlValidator } from "../../../validators/custom.validators";
+import { environment } from "../../../../environments/environment";
 
 @Component({
   selector: "app-admin-therapists",
@@ -47,6 +48,8 @@ export class TherapistsComponent implements OnInit {
   confirmId = signal<string | null>(null);
   editingId = signal<string | null>(null);
   isCreating = signal(false);
+  /** While off, the ConsultorioME field is hidden but a therapist's saved proId is still sent back. */
+  readonly consultorioMEEnabled = environment.consultorioME;
 
   form = this.fb.group({
     name: ["", [Validators.required, Validators.maxLength(100)]],
@@ -61,7 +64,9 @@ export class TherapistsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAll();
-    this.loadProfessionals();
+    if (this.consultorioMEEnabled) {
+      this.loadProfessionals();
+    }
   }
 
   loadAll() {
